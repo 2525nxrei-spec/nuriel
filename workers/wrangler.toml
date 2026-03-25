@@ -1,0 +1,55 @@
+# ============================================================
+# ヌリエル API — Cloudflare Workers 設定
+# ============================================================
+
+name = "nuriel-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# アカウントID（デプロイ時に設定）
+# account_id = ""
+
+# ============================================================
+# D1 データベースバインディング
+# ============================================================
+[[d1_databases]]
+binding = "NURIEL_DB"
+database_name = "nuriel-db"
+database_id = ""  # wrangler d1 create nuriel-db で取得したIDを設定
+
+# ============================================================
+# R2 ストレージバインディング
+# ============================================================
+[[r2_buckets]]
+binding = "NURIEL_STORAGE"
+bucket_name = "nuriel-storage"
+
+# ============================================================
+# 環境変数（シークレットは wrangler secret put で設定）
+# ============================================================
+[vars]
+FRONTEND_URL = "https://nuriel.pages.dev"
+
+# 以下はシークレットとして設定（wrangler secret put コマンド使用）
+# REPLICATE_API_TOKEN    — Replicate API トークン
+# STRIPE_SECRET_KEY      — Stripe シークレットキー
+# STRIPE_WEBHOOK_SECRET  — Stripe Webhook シークレット
+# JWT_SECRET             — セッショントークン署名用シークレット
+
+# ============================================================
+# 開発環境
+# ============================================================
+[env.dev]
+name = "nuriel-api-dev"
+
+[env.dev.vars]
+FRONTEND_URL = "http://localhost:3000"
+
+# ============================================================
+# ステージング環境
+# ============================================================
+[env.staging]
+name = "nuriel-api-staging"
+
+[env.staging.vars]
+FRONTEND_URL = "https://nuriel-staging.pages.dev"

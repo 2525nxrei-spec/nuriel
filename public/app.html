@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ヌリエル</title>
+  <meta name="description" content="うちの子を、ぬりえに。ペット写真をぬりえの線画に変換。">
+  <meta name="theme-color" content="#6B46C1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+  <!-- ========== 認証オーバーレイ ========== -->
+  <div class="auth-overlay hidden" id="authOverlay">
+    <div class="auth-card">
+      <div class="auth-card-logo">🎨</div>
+      <h2 id="authTitle">ログイン</h2>
+      <form class="auth-form" id="authForm" data-mode="login" novalidate>
+        <div class="form-group">
+          <label for="authEmail">メールアドレス</label>
+          <input type="email" id="authEmail" class="form-input" placeholder="example@mail.com" autocomplete="email" required>
+          <span class="form-error" id="authEmailError"></span>
+        </div>
+        <div class="form-group">
+          <label for="authPassword">パスワード</label>
+          <input type="password" id="authPassword" class="form-input" placeholder="8文字以上" autocomplete="current-password" required minlength="8">
+          <span class="form-error" id="authPasswordError"></span>
+        </div>
+        <button type="submit" class="btn-primary" id="authSubmitBtn">ログイン</button>
+      </form>
+      <div class="auth-switch" id="authSwitch">
+        アカウントをお持ちでない方は <a id="authToggle">新規登録はこちら</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 変換中オーバーレイ ========== -->
+  <div class="converting-overlay" id="convertingOverlay">
+    <div class="converting-spinner"></div>
+    <div class="converting-text" id="convertingText">線画をつくっています...</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="converting-sub">しばらくお待ちください</div>
+  </div>
+
+  <!-- ========== ギャラリー詳細モーダル ========== -->
+  <div class="gallery-modal" id="galleryModal">
+    <div class="gallery-modal-card">
+      <img class="gallery-modal-img" id="galleryModalImg" src="" alt="塗り絵詳細">
+      <div class="gallery-modal-actions">
+        <button class="btn-secondary" id="modalBtnDownload">📄 PDFダウンロード</button>
+        <button class="btn-danger" id="modalBtnDelete">🗑 削除</button>
+        <button class="btn-secondary" id="modalBtnClose">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== トースト通知 ========== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ========== アプリ本体 ========== -->
+  <div class="app-wrapper">
+    <!-- ヘッダー -->
+    <header class="app-header">
+      <div class="app-header-logo">🎨 ヌリエル</div>
+      <div class="app-header-right">
+        <span class="remaining-badge" id="remainingBadge">今月あと 3 枚</span>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="app-main">
+
+      <!-- ===== ホーム / アップロード画面 ===== -->
+      <div class="screen active" id="screen-home">
+        <h2 class="screen-title">🐾 ぬりえをつくる</h2>
+
+        <!-- アップロードエリア -->
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="fileInput" accept="image/*" capture="environment">
+          <div class="upload-area-icon">📸</div>
+          <h3>写真をアップロード</h3>
+          <p>タップして選択、またはドラッグ＆ドロップ<br>
+          <small>JPEG / PNG / WebP（10MBまで）</small></p>
+        </div>
+
+        <!-- プレビュー -->
+        <div class="preview-container" id="previewContainer">
+          <img class="preview-img" id="previewImg" src="" alt="プレビュー">
+          <p class="preview-name" id="previewName"></p>
+          <a class="preview-change" id="previewChange">別の写真を選ぶ</a>
+        </div>
+
+        <!-- スタイル選択 -->
+        <h3 class="style-select-title">🎨 スタイルを選ぶ</h3>
+        <div class="style-select-grid">
+          <div class="style-option" data-style="gentle" data-premium="false">
+            <div class="style-option-icon">✏️</div>
+            <div class="style-option-name">やさしいライン</div>
+          </div>
+          <div class="style-option selected" data-style="standard" data-premium="false">
+            <div class="style-option-icon">🖊️</div>
+            <div class="style-option-name">スタンダード</div>
+          </div>
+          <div class="style-option locked" data-style="sketch" data-premium="true">
+            <div class="style-option-icon">🎨</div>
+            <div class="style-option-name">リアルスケッチ</div>
+          </div>
+          <div class="style-option locked" data-style="manga" data-premium="true">
+            <div class="style-option-icon">💥</div>
+            <div class="style-option-name">マンガ風</div>
+          </div>
+        </div>
+
+        <!-- 生成ボタン -->
+        <div class="generate-section">
+          <button class="btn-generate" id="btnGenerate">🖌️ 線画を生成する</button>
+        </div>
+
+        <!-- 変換結果 -->
+        <div class="result-section" id="resultSection">
+          <h3 class="screen-title mt-3">✨ 完成しました！</h3>
+          <img class="result-preview" id="resultPreview" src="" alt="線画結果">
+          <div class="result-actions">
+            <button class="btn-primary" id="btnDownloadPdf" style="padding: 0.75rem 1.5rem; font-size: 0.9rem;">📄 PDFをダウンロード</button>
+            <button class="btn-secondary" id="btnSaveGallery">💾 ギャラリーに保存</button>
+            <button class="btn-secondary" id="btnNewConvert">🔄 もう一枚つくる</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ギャラリー画面 ===== -->
+      <div class="screen" id="screen-gallery">
+        <h2 class="screen-title">🖼️ ギャラリー</h2>
+        <div class="gallery-grid" id="galleryGrid"></div>
+        <div class="gallery-empty" id="galleryEmpty" style="display:none;">
+          <div class="gallery-empty-icon">🎨</div>
+          <p>まだ塗り絵がありません</p>
+          <p style="font-size:0.85rem; margin-top:0.5rem; color:var(--warm-gray);">ホーム画面から最初の1枚を作ってみましょう</p>
+        </div>
+      </div>
+
+      <!-- ===== プラン画面 ===== -->
+      <div class="screen" id="screen-plan">
+        <h2 class="screen-title">💎 プラン</h2>
+
+        <!-- 現在のプラン -->
+        <div class="current-plan-card">
+          <div class="current-plan-label">現在のプラン</div>
+          <div class="current-plan-name" id="currentPlanName">🐾 おためし</div>
+          <div class="current-plan-detail" id="currentPlanDetail">今月の残り: 3 / 3 枚</div>
+        </div>
+
+        <!-- プラン選択 -->
+        <div class="plan-options">
+          <div class="plan-option-card">
+            <div class="plan-option-info">
+              <h3>🐾 おためし — ¥100/月</h3>
+              <p>月3枚 / 基本スタイル2種 / 年額¥1,000（2ヶ月おトク）</p>
+            </div>
+            <button class="btn-plan btn-plan-current" id="btnPlanOtameshi">利用中</button>
+          </div>
+          <div class="plan-option-card">
+            <div class="plan-option-info">
+              <h3>🎨 たっぷり — ¥300/月</h3>
+              <p>月20枚 / 全4スタイル / 年額¥3,000（2ヶ月おトク）</p>
+            </div>
+            <button class="btn-plan btn-plan-upgrade" id="btnPlanTappuri">アップグレード</button>
+          </div>
+        </div>
+
+        <!-- 対応決済方法 -->
+        <div class="payment-methods-section">
+          <h3 class="payment-methods-title">お支払い方法</h3>
+          <div class="payment-methods-grid">
+            <div class="payment-method-badge">
+              <span class="payment-method-icon">💳</span>
+              <span class="payment-method-name">クレジットカード</span>
+            </div>
+            <div class="payment-method-badge" id="badgePayPay">
+              <span class="payment-method-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align:middle"><rect width="24" height="24" rx="4" fill="#FF0033"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">Pay</text></svg>
+              </span>
+              <span class="payment-method-name">PayPay</span>
+            </div>
+            <div class="payment-method-badge" id="badgeApplePay" style="display:none;">
+              <span class="payment-method-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align:middle"><rect width="24" height="24" rx="4" fill="#000"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold"> Pay</text></svg>
+              </span>
+              <span class="payment-method-name">Apple Pay</span>
+            </div>
+            <div class="payment-method-badge" id="badgeGooglePay" style="display:none;">
+              <span class="payment-method-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align:middle"><rect width="24" height="24" rx="4" fill="#fff" stroke="#ddd"/><text x="12" y="16" text-anchor="middle" fill="#4285F4" font-size="8" font-weight="bold">G Pay</text></svg>
+              </span>
+              <span class="payment-method-name">Google Pay</span>
+            </div>
+          </div>
+
+          <!-- Apple Pay / Google Pay インラインボタン -->
+          <div id="paymentRequestButtonContainer" style="display:none; margin-top:1rem;">
+            <div id="payment-request-button"></div>
+          </div>
+
+          <p class="payment-methods-note">
+            Stripe による安全な決済処理。すべてのお支払いは暗号化で保護されています。
+          </p>
+        </div>
+      </div>
+
+      <!-- ===== 設定画面 ===== -->
+      <div class="screen" id="screen-settings">
+        <h2 class="screen-title">⚙️ 設定</h2>
+
+        <div class="settings-section">
+          <h3>アカウント情報</h3>
+          <div class="settings-row">
+            <span class="settings-row-label">表示名</span>
+            <span class="settings-row-value" id="settingsDisplayName">未設定</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">メールアドレス</span>
+            <span class="settings-row-value" id="settingsEmail">-</span>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>セキュリティ</h3>
+          <div class="settings-row">
+            <span class="settings-row-label">パスワード変更</span>
+            <button class="btn-settings" onclick="showToast('パスワード変更メールを送信しました')">変更する</button>
+          </div>
+        </div>
+
+        <button class="btn-logout" id="btnLogout">ログアウト</button>
+        <button class="btn-withdraw" id="btnWithdraw">退会する</button>
+      </div>
+
+    </main>
+
+    <!-- ========== 下部ナビゲーション ========== -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-screen="home">
+        <span class="nav-item-icon">🏠</span>
+        ホーム
+      </button>
+      <button class="nav-item" data-screen="gallery">
+        <span class="nav-item-icon">🖼️</span>
+        ギャラリー
+      </button>
+      <button class="nav-item" data-screen="plan">
+        <span class="nav-item-icon">💎</span>
+        プラン
+      </button>
+      <button class="nav-item" data-screen="settings">
+        <span class="nav-item-icon">⚙️</span>
+        設定
+      </button>
+    </nav>
+  </div>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
