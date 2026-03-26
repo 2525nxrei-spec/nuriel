@@ -147,9 +147,6 @@ img { max-width: 100%; height: auto; display: block; }
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
 }
-.nav-item-icon {
-  font-size: 1.4rem;
-}
 .nav-item.active {
   color: var(--primary);
 }
@@ -219,11 +216,6 @@ img { max-width: 100%; height: auto; display: block; }
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
-}
-.auth-card-logo {
-  text-align: center;
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
 }
 .auth-card h2 {
   text-align: center;
@@ -444,7 +436,6 @@ img { max-width: 100%; height: auto; display: block; }
   right: 0.5rem;
   font-size: 0.9rem;
 }
-.style-option-icon { font-size: 1.8rem; margin-bottom: 0.3rem; }
 .style-option-name {
   font-size: 0.85rem;
   font-weight: 600;

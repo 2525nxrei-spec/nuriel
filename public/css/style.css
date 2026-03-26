@@ -224,13 +224,11 @@ img { max-width: 100%; height: auto; display: block; }
 .hero-card-line {
   border: 3px solid var(--primary-light);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
 }
 .hero-card-lineart {
   display: none;
-}
-.hero-card-line {
-  position: relative;
-  overflow: hidden;
 }
 .hero-canvas {
   width: 100%;

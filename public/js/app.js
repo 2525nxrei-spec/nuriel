@@ -901,6 +901,11 @@ function bindEvents() {
     handlePlanChange('たっぷり');
   });
 
+  // --- 設定: パスワード変更 ---
+  document.getElementById('btnChangePassword').addEventListener('click', () => {
+    showToast('パスワード変更メールを送信しました');
+  });
+
   // --- 設定: ログアウト ---
   document.getElementById('btnLogout').addEventListener('click', () => {
     if (confirm('ログアウトしますか？')) {
