@@ -366,15 +366,21 @@ const ui = {
     const title = document.getElementById('authTitle');
     const submitBtn = document.getElementById('authSubmitBtn');
     const switchText = document.getElementById('authSwitch');
+    const termsGroup = document.getElementById('authTermsGroup');
+    const pwStrength = document.getElementById('authPwStrength');
 
     if (mode === 'login') {
       title.textContent = 'ログイン';
       submitBtn.textContent = 'ログイン';
       switchText.innerHTML = 'アカウントをお持ちでない方は <a id="authToggle">新規登録はこちら</a>';
+      if (termsGroup) termsGroup.style.display = 'none';
+      if (pwStrength) pwStrength.style.display = 'none';
     } else {
       title.textContent = '新規登録';
       submitBtn.textContent = '無料で始める';
       switchText.innerHTML = 'アカウントをお持ちの方は <a id="authToggle">ログインはこちら</a>';
+      if (termsGroup) termsGroup.style.display = 'block';
+      if (pwStrength) pwStrength.style.display = 'block';
     }
 
     // 切替リンクにイベント
@@ -1099,9 +1105,43 @@ function bindEvents() {
     handlePlanChange('たっぷり');
   });
 
-  // --- 設定: パスワード変更 ---
+  // --- 設定: パスワード変更（フォーム表示トグル） ---
   document.getElementById('btnChangePassword').addEventListener('click', () => {
-    showToast('パスワード変更メールを送信しました');
+    const form = document.getElementById('password-change-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // パスワード強度チェック（リアルタイム）
+  document.getElementById('settingsNewPw').addEventListener('input', function() {
+    const pw = this.value;
+    const el = document.getElementById('settingsPwStrength');
+    if (pw.length === 0) { el.textContent = '8文字以上、英字と数字を含めてください'; el.style.color = '#999'; }
+    else if (pw.length < 8) { el.textContent = 'あと' + (8 - pw.length) + '文字必要です'; el.style.color = '#dc2626'; }
+    else if (!/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw)) { el.textContent = '英字と数字の両方を含めてください'; el.style.color = '#d97706'; }
+    else { el.textContent = 'パスワード強度: OK'; el.style.color = '#16a34a'; }
+  });
+
+  // パスワード変更送信
+  document.getElementById('btnSubmitPassword').addEventListener('click', async () => {
+    const btn = document.getElementById('btnSubmitPassword');
+    const currentPw = document.getElementById('settingsCurrentPw').value;
+    const newPw = document.getElementById('settingsNewPw').value;
+    const confirmPw = document.getElementById('settingsConfirmPw').value;
+    if (!currentPw) { showToast('現在のパスワードを入力してください', 'error'); return; }
+    if (!newPw || newPw.length < 8) { showToast('新しいパスワードは8文字以上で入力してください', 'error'); return; }
+    if (!/[a-zA-Z]/.test(newPw) || !/[0-9]/.test(newPw)) { showToast('パスワードは英字と数字の両方を含めてください', 'error'); return; }
+    if (newPw !== confirmPw) { showToast('新しいパスワードが一致しません', 'error'); return; }
+
+    btn.disabled = true; btn.textContent = '変更中...';
+    try {
+      await api.request('/auth/password', { method: 'PUT', body: JSON.stringify({ current_password: currentPw, new_password: newPw }) });
+      showToast('パスワードを変更しました');
+      document.getElementById('settingsCurrentPw').value = '';
+      document.getElementById('settingsNewPw').value = '';
+      document.getElementById('settingsConfirmPw').value = '';
+      document.getElementById('password-change-form').style.display = 'none';
+    } catch (err) { showToast(err.message || 'パスワード変更に失敗しました', 'error'); }
+    finally { btn.disabled = false; btn.textContent = 'パスワードを変更'; }
   });
 
   // --- 設定: ログアウト ---
@@ -1129,7 +1169,17 @@ function bindEvents() {
   });
 }
 
-/** プラン変更処理（PayPay / Apple Pay / Google Pay / カード対応） */
+/** Embedded Checkout モーダルを閉じる */
+function closeNurielCheckoutModal() {
+  const modal = document.getElementById('nuriel-checkout-modal');
+  if (modal) modal.remove();
+  if (window._nuriel_embedded_checkout) {
+    window._nuriel_embedded_checkout.destroy();
+    window._nuriel_embedded_checkout = null;
+  }
+}
+
+/** プラン変更処理（Embedded Checkout方式 — ページ内決済） */
 async function handlePlanChange(planName) {
   if (state.plan.name === planName) return;
 
@@ -1149,8 +1199,6 @@ async function handlePlanChange(planName) {
     const planId = planIdMap[planName];
     if (!planId) return;
 
-    /* Stripe Checkout セッション作成
-       バックエンドでPayPay / Apple Pay / Google Pay が自動的に有効化される */
     /* ユーザーが選択した請求期間を取得 */
     const activeToggle = document.querySelector('#appBillingToggle .billing-toggle-btn.active');
     const billingPeriod = activeToggle ? activeToggle.dataset.period : 'monthly';
@@ -1160,21 +1208,49 @@ async function handlePlanChange(planName) {
       billing_period: billingPeriod,
     });
 
-    if (result.checkout_url) {
-      /* Checkout画面へリダイレクト
-         - カード決済: Checkout画面で入力
-         - PayPay: Checkout画面からPayPayアプリへリダイレクト
-         - Apple Pay: Safari上でCheckout画面にApple Payボタン表示
-         - Google Pay: Chrome上でCheckout画面にGoogle Payボタン表示 */
-      showToast('決済画面に移動します...');
-      window.location.href = result.checkout_url;
-    } else {
+    if (result.mock) {
       /* モックモード: 即座にプラン切替 */
       state.plan.name = planName;
       state.plan.total = planName === 'たっぷり' ? 20 : 3;
       planUI.render();
       updateStyleLocks();
       showToast(`${planName}プランに変更しました`);
+    } else if (result.clientSecret) {
+      /* Stripe公開鍵を取得 */
+      const keyRes = await fetch('/api/billing/stripe-key');
+      const keyData = await keyRes.json();
+      if (!keyData.publishableKey) {
+        /* 公開鍵未設定 → 環境変数またはmeta tagから取得を試みる */
+        const pk = CONFIG.STRIPE_PUBLISHABLE_KEY
+          || document.querySelector('meta[name="stripe-key"]')?.content;
+        if (!pk) throw new Error('Stripe公開鍵が取得できませんでした');
+        keyData.publishableKey = pk;
+      }
+
+      const stripe = (typeof Stripe !== 'undefined') ? Stripe(keyData.publishableKey) : null;
+      if (!stripe) throw new Error('Stripe.jsが読み込まれていません');
+
+      /* Embedded Checkout モーダルを作成 */
+      const modal = document.createElement('div');
+      modal.id = 'nuriel-checkout-modal';
+      modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
+      modal.innerHTML = `
+        <div style="background:#fff;border-radius:12px;width:100%;max-width:500px;max-height:90vh;overflow:auto;position:relative;">
+          <button id="nuriel-checkout-close" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:24px;cursor:pointer;color:#666;z-index:1;">&times;</button>
+          <div id="nuriel-checkout-container" style="padding:16px;"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      document.getElementById('nuriel-checkout-close').addEventListener('click', closeNurielCheckoutModal);
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeNurielCheckoutModal(); });
+
+      /* Embedded Checkoutをマウント */
+      const checkout = await stripe.initEmbeddedCheckout({ clientSecret: result.clientSecret });
+      window._nuriel_embedded_checkout = checkout;
+      checkout.mount('#nuriel-checkout-container');
+    } else {
+      showToast('決済セッションの作成に失敗しました', 'error');
     }
   } catch (err) {
     showToast(err.message, 'error');
@@ -1187,15 +1263,23 @@ async function handlePlanChange(planName) {
   }
 }
 
-/** 退会処理（現時点では未実装のため、ログアウトのみ） */
+/** 退会処理（パスワード確認後にアカウント削除） */
 async function handleWithdraw() {
+  const pw = prompt('退会するにはパスワードを入力してください。\nこの操作は取り消せません。すべてのデータが削除されます。');
+  if (!pw) return;
+  if (!confirm('本当に退会しますか？\nすべてのデータが完全に削除されます。')) return;
+
   try {
-    // TODO: 退会APIの実装後に /api/auth/withdraw を呼び出す
-    await api.post('/auth/logout');
-    auth.logout();
-    showToast('退会処理を受け付けました。ご利用ありがとうございました。');
+    await api.request('/auth/account', {
+      method: 'DELETE',
+      body: JSON.stringify({ password: pw }),
+    });
+    localStorage.removeItem('nuriel_token');
+    localStorage.removeItem('nuriel_user');
+    showToast('退会処理が完了しました。ご利用ありがとうございました。');
+    setTimeout(() => { window.location.href = '/'; }, 1500);
   } catch (err) {
-    showToast(err.message, 'error');
+    showToast(err.message || '退会処理に失敗しました', 'error');
   }
 }
 

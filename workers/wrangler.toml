@@ -29,6 +29,8 @@ bucket_name = "nuriel-storage"
 # ============================================================
 [vars]
 FRONTEND_URL = "https://photo-nurie.com"
+# Stripe公開鍵（Embedded Checkout用）— Cloudflareダッシュボードで本番値を設定
+STRIPE_PUBLISHABLE_KEY = ""
 
 # 以下はシークレットとして設定（wrangler secret put コマンド使用）
 # REPLICATE_API_TOKEN    — Replicate API トークン

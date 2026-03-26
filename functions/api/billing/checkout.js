@@ -56,11 +56,8 @@ export async function onRequestPost(context) {
 
     // --- モックモード ---
     if (isMockMode(env)) {
-      const frontendUrl = env.FRONTEND_URL || 'https://photo-nurie.com';
-      const mockCheckoutUrl = `${frontendUrl}/app.html#plan?mock_checkout=success&plan_id=${plan_id}&billing_period=${billing_period}&methods=card,paypay,applepay,googlepay`;
-
       console.log(`[モック] Checkoutセッション作成: plan=${plan_id}, period=${billing_period}, user=${user.id}`);
-      return jsonResponse({ checkout_url: mockCheckoutUrl });
+      return jsonResponse({ clientSecret: 'mock_client_secret', mock: true });
     }
 
     // --- Stripe顧客の確認/作成 ---
@@ -83,19 +80,18 @@ export async function onRequestPost(context) {
         .run();
     }
 
-    // --- Stripe Checkout Session作成 ---
+    // --- Stripe Embedded Checkout Session作成 ---
     const frontendUrl = env.FRONTEND_URL || 'https://photo-nurie.com';
 
-    // payment_method_types を指定しない → Stripeダッシュボードで有効化した決済方法が全て自動表示
-    // （card=クレカ/Apple Pay/Google Pay、paypay、konbini 等）
+    // Embedded Checkout: ページ内埋め込み決済（リダイレクトなし）
     const session = await stripeRequest('checkout/sessions', 'POST', {
       mode: 'subscription',
+      ui_mode: 'embedded',
       customer: stripeCustomerId,
       locale: 'ja',
       'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',
-      success_url: `${frontendUrl}/app.html#plan?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/app.html#plan`,
+      return_url: `${frontendUrl}/app.html#plan?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
         user_id: user.id,
         plan_id: plan_id,
@@ -109,7 +105,7 @@ export async function onRequestPost(context) {
     }, env.STRIPE_SECRET_KEY);
 
     console.log(`Checkoutセッション作成: session=${session.id}, plan=${plan_id}, user=${user.id}`);
-    return jsonResponse({ checkout_url: session.url });
+    return jsonResponse({ clientSecret: session.client_secret });
   } catch (err) {
     if (err instanceof StripeApiError) {
       console.error('Stripe Checkoutエラー:', err.message, err.type, err.code);
