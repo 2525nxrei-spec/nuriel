@@ -15,7 +15,7 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "NURIEL_DB"
 database_name = "nuriel-db"
-database_id = ""  # wrangler d1 create nuriel-db で取得したIDを設定
+database_id = "741935ea-58b3-460d-931d-08d20973db45"
 
 # ============================================================
 # R2 ストレージバインディング

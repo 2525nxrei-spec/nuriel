@@ -397,12 +397,11 @@ export async function handleCheckout(request, env, user) {
     // --- Stripe Checkout Session作成 ---
     const frontendUrl = env.FRONTEND_URL || 'http://localhost:8788';
 
-    // PayPay・カード決済対応（Apple Pay/Google PayはStripe Checkout側で自動有効化）
+    // payment_method_types を指定しない → Stripeダッシュボードで有効化した決済方法が全て自動表示
+    // （card=クレカ/Apple Pay/Google Pay、paypay、konbini 等）
     const session = await stripeRequest('checkout/sessions', 'POST', {
       mode: 'subscription',
       customer: stripeCustomerId,
-      'payment_method_types[0]': 'card',
-      'payment_method_types[1]': 'paypay',
       locale: 'ja',
       'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',

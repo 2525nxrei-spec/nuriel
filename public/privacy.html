@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プライバシーポリシー — ヌリエル</title>
+  <meta name="description" content="ヌリエルのプライバシーポリシーページです。">
+  <meta name="theme-color" content="#6B46C1">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .legal-page {
+      padding: 96px 0 4rem;
+      min-height: calc(100vh - 200px);
+      background: #fff;
+    }
+    .legal-page .container {
+      max-width: 720px;
+    }
+    .legal-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--primary);
+    }
+    .legal-section {
+      margin-bottom: 2rem;
+    }
+    .legal-section h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+      padding-left: 0.75rem;
+      border-left: 3px solid var(--primary);
+    }
+    .legal-section p,
+    .legal-section ul {
+      font-size: 0.95rem;
+      color: var(--text-light);
+      line-height: 1.9;
+      margin-bottom: 0.75rem;
+    }
+    .legal-section ul {
+      padding-left: 1.5rem;
+    }
+    .legal-section li {
+      margin-bottom: 0.4rem;
+    }
+    .legal-date {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-top: 2rem;
+      text-align: right;
+    }
+    .legal-back {
+      display: inline-block;
+      margin-top: 2rem;
+      font-size: 0.95rem;
+      color: var(--primary-dark);
+    }
+    .legal-back:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 640px) {
+      .legal-page { padding-top: 72px; }
+      .legal-title { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <header class="lp-header" id="header">
+    <div class="container">
+      <a href="/" class="lp-logo" style="text-decoration:none;">ヌリエル</a>
+      <nav class="lp-nav">
+        <a href="/#howto">使い方</a>
+        <a href="/#pricing">料金</a>
+        <a href="/#faq">FAQ</a>
+        <a href="/app.html" class="header-cta">ログイン</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 本文 -->
+  <main class="legal-page">
+    <div class="container">
+      <h1 class="legal-title">プライバシーポリシー</h1>
+
+      <p style="font-size:0.95rem; color:var(--text-light); line-height:1.9; margin-bottom:2rem;">
+        ヌリエル（以下「本サービス」）を運営する濱田礼（以下「運営者」）は、ユーザーの個人情報およびプライバシーの保護に努めます。本ポリシーは、本サービスにおける情報の取り扱いについて定めたものです。
+      </p>
+
+      <div class="legal-section">
+        <h2>1. 収集する情報</h2>
+        <p>本サービスでは、以下の情報を収集する場合があります。</p>
+        <ul>
+          <li><strong>アカウント情報</strong> — メールアドレス、パスワード（ハッシュ化して保存）</li>
+          <li><strong>画像データ</strong> — ユーザーがアップロードしたペット写真（線画変換処理にのみ使用し、変換後は速やかに削除します）</li>
+          <li><strong>生成データ</strong> — 変換後の線画データ（ギャラリー機能で保存、退会時に全削除）</li>
+          <li><strong>決済情報</strong> — クレジットカード番号等の決済情報はStripe, Inc.が管理しており、運営者が直接保持することはありません</li>
+          <li><strong>利用情報</strong> — アクセスログ、IPアドレス、ブラウザ情報、利用日時</li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>2. 情報の利用目的</h2>
+        <p>収集した情報は、以下の目的で利用します。</p>
+        <ul>
+          <li>本サービスの提供・運営・改善</li>
+          <li>ユーザーからのお問い合わせへの対応</li>
+          <li>利用料金の決済処理</li>
+          <li>利用規約に違反する行為への対応</li>
+          <li>サービスに関するお知らせの送信</li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>3. 画像データの取り扱い</h2>
+        <p>ユーザーがアップロードした写真データは、AIによる線画変換処理の目的にのみ使用します。変換処理完了後、元の写真データはサーバーから速やかに削除されます。</p>
+        <p>生成された線画データは、ユーザーのギャラリーに保存されます。ユーザーが退会した場合、すべての線画データは削除されます。</p>
+        <p>ユーザーがアップロードした画像をAIモデルの学習データとして使用することはありません。</p>
+      </div>
+
+      <div class="legal-section">
+        <h2>4. 決済情報の取り扱い</h2>
+        <p>本サービスの決済処理はStripe, Inc.を通じて行われます。クレジットカード番号等のセンシティブな決済情報は、Stripeのセキュアなシステムで管理されており、運営者のサーバーに保存されることはありません。</p>
+        <p>Stripeのプライバシーポリシーについては、<a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener">Stripe プライバシーポリシー</a>をご確認ください。</p>
+      </div>
+
+      <div class="legal-section">
+        <h2>5. Cookieの使用</h2>
+        <p>本サービスでは、以下の目的でCookieを使用します。</p>
+        <ul>
+          <li>ログイン状態の維持</li>
+          <li>ユーザー設定の保存</li>
+          <li>サービスの利用状況の把握</li>
+        </ul>
+        <p>ブラウザの設定によりCookieを無効にすることができますが、その場合、本サービスの一部機能が正常に動作しない場合があります。</p>
+      </div>
+
+      <div class="legal-section">
+        <h2>6. 第三者への提供</h2>
+        <p>運営者は、以下の場合を除き、ユーザーの個人情報を第三者に提供しません。</p>
+        <ul>
+          <li>ユーザーの同意がある場合</li>
+          <li>法令に基づく場合</li>
+          <li>人の生命・身体・財産の保護に必要な場合</li>
+          <li>決済処理のためにStripeへ提供する場合</li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>7. 情報の安全管理</h2>
+        <p>運営者は、個人情報の漏洩・滅失・毀損を防止するため、適切な安全管理措置を講じます。</p>
+      </div>
+
+      <div class="legal-section">
+        <h2>8. 個人情報の開示・訂正・削除</h2>
+        <p>ユーザーは、運営者に対して自己の個人情報の開示・訂正・削除を請求することができます。ご希望の場合は、下記のお問い合わせ先までご連絡ください。</p>
+      </div>
+
+      <div class="legal-section">
+        <h2>9. お問い合わせ</h2>
+        <p>本ポリシーに関するお問い合わせは、以下までご連絡ください。</p>
+        <p>メール：<a href="mailto:2525nxrei@gmail.com">2525nxrei@gmail.com</a></p>
+      </div>
+
+      <div class="legal-section">
+        <h2>10. ポリシーの変更</h2>
+        <p>本ポリシーの内容は、必要に応じて変更することがあります。変更後のポリシーは、本ページに掲載した時点から効力を生じます。</p>
+      </div>
+
+      <p class="legal-date">制定日：2026年3月26日</p>
+
+      <a href="/" class="legal-back">← トップページに戻る</a>
+    </div>
+  </main>
+
+  <!-- フッター -->
+  <footer class="lp-footer">
+    <div class="container">
+      <div class="footer-logo">ヌリエル</div>
+      <div class="footer-links">
+        <a href="/terms.html">利用規約</a>
+        <a href="/privacy.html">プライバシーポリシー</a>
+        <a href="/tokushoho.html">特定商取引法に基づく表記</a>
+        <a href="/contact.html">お問い合わせ</a>
+      </div>
+      <p class="footer-copy">&copy; 2026 礼株式会社 All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
+  </script>
+
+</body>
+</html>

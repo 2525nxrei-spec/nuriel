@@ -8,7 +8,7 @@ import { generateId } from '../lib/crypto.js';
 import { authenticate } from '../lib/auth.js';
 
 /** 許可する画像MIMEタイプ */
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
 
 /** アップロード上限: 10MB */
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -23,6 +23,7 @@ function getExtension(mime) {
     'image/jpeg': 'jpg',
     'image/png': 'png',
     'image/webp': 'webp',
+    'image/heic': 'heic',
   };
   return map[mime] || 'bin';
 }
@@ -54,7 +55,7 @@ export async function onRequestPost(context) {
     // MIMEタイプ検証
     if (!ALLOWED_TYPES.includes(file.type)) {
       return errorResponse(
-        `対応していない画像形式です。JPEG, PNG, WebPのみ対応しています。（受信: ${file.type}）`,
+        `対応していない画像形式です。JPEG, PNG, WebP, HEICのみ対応しています。（受信: ${file.type}）`,
         400
       );
     }
@@ -72,7 +73,7 @@ export async function onRequestPost(context) {
     mimeType = contentType.split(';')[0].trim();
     if (!ALLOWED_TYPES.includes(mimeType)) {
       return errorResponse(
-        'Content-Typeが画像形式（image/jpeg, image/png, image/webp）ではありません',
+        'Content-Typeが画像形式（image/jpeg, image/png, image/webp, image/heic）ではありません',
         400
       );
     }

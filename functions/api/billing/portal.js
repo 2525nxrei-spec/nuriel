@@ -15,7 +15,7 @@ export async function onRequestPost(context) {
   }
 
   try {
-    const frontendUrl = env.FRONTEND_URL || 'http://localhost:8788';
+    const frontendUrl = env.FRONTEND_URL || 'https://photo-nurie.com';
 
     // --- モックモード ---
     if (isMockMode(env)) {

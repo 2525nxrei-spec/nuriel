@@ -305,6 +305,8 @@ img { max-width: 100%; height: auto; display: block; }
   cursor: pointer;
 }
 
+
+
 /* --- アップロードエリア --- */
 .upload-area {
   border: 3px dashed var(--border);
@@ -1066,4 +1068,18 @@ img { max-width: 100%; height: auto; display: block; }
 .payment-confirm-actions .btn-secondary {
   width: 100%;
   text-align: center;
+}
+
+/* --- 無料体験プランカード --- */
+.plan-free-card {
+  border: 1px dashed var(--border);
+  background: var(--cream);
+  opacity: 0.85;
+}
+.plan-free-label {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 0.4rem 0.8rem;
 }

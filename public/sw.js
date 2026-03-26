@@ -88,13 +88,13 @@ function offlineFallback() {
       justify-content: center;
       min-height: 100vh;
       background: #FFFAF6;
-      color: #D2735C;
+      color: #3D3330;
       padding: 2rem;
       text-align: center;
     }
     .offline-icon { font-size: 4rem; margin-bottom: 1rem; }
     h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    p { color: #B85A3D; opacity: 0.7; }
+    p { color: #7A6B66; opacity: 0.7; }
     button {
       margin-top: 1.5rem;
       padding: 0.75rem 2rem;

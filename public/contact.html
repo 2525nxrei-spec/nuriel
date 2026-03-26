@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お問い合わせ — ヌリエル</title>
+  <meta name="description" content="ヌリエルへのお問い合わせページです。">
+  <meta name="theme-color" content="#6B46C1">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .legal-page {
+      padding: 96px 0 4rem;
+      min-height: calc(100vh - 200px);
+      background: #fff;
+    }
+    .legal-page .container {
+      max-width: 720px;
+    }
+    .legal-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--primary);
+    }
+    .contact-intro {
+      font-size: 0.95rem;
+      color: var(--text-light);
+      line-height: 1.9;
+      margin-bottom: 2rem;
+    }
+    .contact-card {
+      background: var(--primary-pale);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .contact-card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .contact-card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .contact-card-desc {
+      font-size: 0.95rem;
+      color: var(--text-light);
+      margin-bottom: 1.25rem;
+      line-height: 1.8;
+    }
+    .contact-mail-btn {
+      display: inline-block;
+      padding: 0.85rem 2rem;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: var(--radius);
+      text-decoration: none;
+    }
+    .contact-mail-btn:hover {
+      background: var(--primary-dark);
+      text-decoration: none;
+    }
+    .contact-notes {
+      background: var(--cream);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .contact-notes h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+    .contact-notes ul {
+      list-style: none;
+      padding: 0;
+    }
+    .contact-notes li {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      line-height: 1.8;
+      padding: 0.3rem 0;
+      padding-left: 1.2rem;
+      position: relative;
+    }
+    .contact-notes li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.75rem;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--primary-light);
+    }
+    .legal-back {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      color: var(--primary-dark);
+    }
+    .legal-back:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 640px) {
+      .legal-page { padding-top: 72px; }
+      .legal-title { font-size: 1.3rem; }
+      .contact-card { padding: 1.5rem; }
+    }
+    @media (pointer: coarse) {
+      .contact-mail-btn {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <header class="lp-header" id="header">
+    <div class="container">
+      <a href="/" class="lp-logo" style="text-decoration:none;">ヌリエル</a>
+      <nav class="lp-nav">
+        <a href="/#howto">使い方</a>
+        <a href="/#pricing">料金</a>
+        <a href="/#faq">FAQ</a>
+        <a href="/app.html" class="header-cta">ログイン</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 本文 -->
+  <main class="legal-page">
+    <div class="container">
+      <h1 class="legal-title">お問い合わせ</h1>
+
+      <p class="contact-intro">
+        ヌリエルに関するご質問・ご要望・不具合のご報告などは、下記メールアドレスまでお気軽にご連絡ください。通常2〜3営業日以内にご返信いたします。
+      </p>
+
+      <div class="contact-card">
+        <div class="contact-card-icon">&#9993;</div>
+        <div class="contact-card-title">メールでのお問い合わせ</div>
+        <p class="contact-card-desc">
+          お名前・お問い合わせ内容を記載のうえ、<br>以下のボタンからメールをお送りください。
+        </p>
+        <a href="mailto:2525nxrei@gmail.com?subject=【ヌリエル】お問い合わせ" class="contact-mail-btn">
+          メールを送る
+        </a>
+        <p style="font-size:0.85rem; color:var(--text-light); margin-top:0.75rem;">
+          2525nxrei@gmail.com
+        </p>
+      </div>
+
+      <div class="contact-notes">
+        <h2>お問い合わせの際のお願い</h2>
+        <ul>
+          <li>ご登録のメールアドレスからお送りいただくと、確認がスムーズです</li>
+          <li>不具合のご報告の場合は、お使いのブラウザ・端末の情報もお伝えください</li>
+          <li>決済に関するお問い合わせには、ご登録のメールアドレスと発生日時をお知らせください</li>
+          <li>土日祝日のお問い合わせは、翌営業日以降の対応となる場合があります</li>
+        </ul>
+      </div>
+
+      <a href="/" class="legal-back">← トップページに戻る</a>
+    </div>
+  </main>
+
+  <!-- フッター -->
+  <footer class="lp-footer">
+    <div class="container">
+      <div class="footer-logo">ヌリエル</div>
+      <div class="footer-links">
+        <a href="/terms.html">利用規約</a>
+        <a href="/privacy.html">プライバシーポリシー</a>
+        <a href="/tokushoho.html">特定商取引法に基づく表記</a>
+        <a href="/contact.html">お問い合わせ</a>
+      </div>
+      <p class="footer-copy">&copy; 2026 礼株式会社 All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
+  </script>
+
+</body>
+</html>

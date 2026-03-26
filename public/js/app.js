@@ -17,7 +17,8 @@
 const CONFIG = {
   API_BASE: '/api',
   STRIPE_CHECKOUT_URL: '/api/billing/checkout',
-  /* Stripe公開鍵（本番時に差し替え。未設定でも決済以外は動作） */
+  /* 要設定: Stripe公開鍵（本番時に pk_live_xxxx を設定。未設定でも決済以外は動作する） */
+  /* Stripeダッシュボード > Developers > API Keys > Publishable key からコピー */
   STRIPE_PUBLISHABLE_KEY: '',
   // ポーリング間隔（ミリ秒）
   POLL_INTERVAL: 2000,
@@ -139,6 +140,17 @@ const auth = {
 
   /** ログアウト */
   logout() {
+    // サーバー側セッションも削除（非同期、失敗しても続行）
+    const token = localStorage.getItem('nuriel_token');
+    if (token && token !== 'test_token_demo') {
+      fetch(`${CONFIG.API_BASE}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }).catch(() => { /* ログアウトAPI失敗は無視 */ });
+    }
     localStorage.removeItem('nuriel_token');
     localStorage.removeItem('nuriel_user');
     ui.showAuth();
@@ -588,7 +600,9 @@ const converter = {
 
         if (result.status === 'completed') {
           progressFill.style.width = '100%';
-          return result;
+          // 完了後、結果（lineArtBase64含む）を取得
+          const fullResult = await api.get(`/convert/${generationId}/result`);
+          return fullResult;
         }
         if (result.status === 'failed') {
           throw new Error(result.error || '変換に失敗しました。');
@@ -696,17 +710,23 @@ const gallery = {
     }).join('');
 
     // 認証トークン付きで画像を読み込み（data:URL既設定の場合はスキップ）
+    // /api/convert/:id/result はJSONを返す（lineArtBase64フィールドにdata:URL形式の画像が含まれる）
     const token = localStorage.getItem('nuriel_token');
     grid.querySelectorAll('.gallery-item img[data-src]').forEach(async (img) => {
       const src = img.dataset.src;
       if (!src || img.src.startsWith('data:')) return;
       try {
         const res = await fetch(`${CONFIG.API_BASE}${src}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         });
         if (res.ok) {
-          const blob = await res.blob();
-          img.src = URL.createObjectURL(blob);
+          const data = await res.json();
+          if (data.lineArtBase64) {
+            img.src = data.lineArtBase64;
+          }
         }
       } catch {
         // 画像読み込み失敗は無視
@@ -728,13 +748,20 @@ const gallery = {
     const modalImg = document.getElementById('galleryModalImg');
     modal.classList.add('show');
 
-    if (item.lineArtUrl) {
+    // lineArtDataUrl（デモモード）がある場合は直接表示
+    if (item.lineArtDataUrl) {
+      modalImg.src = item.lineArtDataUrl;
+    } else if (item.lineArtUrl) {
+      // 認証トークン付きでJSON APIから画像を取得
       const token = localStorage.getItem('nuriel_token');
       fetch(`${CONFIG.API_BASE}${item.lineArtUrl}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       })
-        .then(res => res.ok ? res.blob() : Promise.reject())
-        .then(blob => { modalImg.src = URL.createObjectURL(blob); })
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(data => { modalImg.src = data.lineArtBase64 || ''; })
         .catch(() => { modalImg.src = ''; });
     } else {
       modalImg.src = '';
@@ -796,23 +823,45 @@ const planUI = {
     const nameEl = document.getElementById('currentPlanName');
     const detailEl = document.getElementById('currentPlanDetail');
 
-    nameEl.textContent = state.plan.name === 'たっぷり' ? 'たっぷり' : 'おためし';
+    nameEl.textContent = state.plan.name || '無料体験';
     detailEl.textContent = `今月の残り: ${state.plan.remaining} / ${state.plan.total} 枚`;
 
     // ボタンの状態更新
     const btnOtameshi = document.getElementById('btnPlanOtameshi');
     const btnTappuri = document.getElementById('btnPlanTappuri');
 
-    if (state.plan.name === 'おためし') {
+    const planName = state.plan.name;
+
+    // 無料体験カードの表示制御
+    const freeCard = document.getElementById('planFreeCard');
+    const freeLabel = document.getElementById('planFreeLabel');
+    if (freeCard && freeLabel) {
+      if (planName === '無料体験' || planName === 'free') {
+        freeCard.style.display = '';
+        freeLabel.textContent = '現在のプラン';
+      } else {
+        freeCard.style.display = 'none';
+      }
+    }
+
+    if (planName === 'たっぷり') {
+      // たっぷりプラン利用中
+      btnOtameshi.textContent = 'ダウングレード';
+      btnOtameshi.className = 'btn-plan btn-plan-upgrade btn-plan-downgrade';
+      btnTappuri.textContent = '利用中';
+      btnTappuri.className = 'btn-plan btn-plan-current';
+    } else if (planName === 'おためし') {
+      // おためしプラン利用中
       btnOtameshi.textContent = '利用中';
       btnOtameshi.className = 'btn-plan btn-plan-current';
       btnTappuri.textContent = 'アップグレード';
       btnTappuri.className = 'btn-plan btn-plan-upgrade';
     } else {
-      btnOtameshi.textContent = 'ダウングレード';
-      btnOtameshi.className = 'btn-plan btn-plan-upgrade btn-plan-downgrade';
-      btnTappuri.textContent = '利用中';
-      btnTappuri.className = 'btn-plan btn-plan-current';
+      // 無料体験プラン（freeプラン）
+      btnOtameshi.textContent = 'アップグレード';
+      btnOtameshi.className = 'btn-plan btn-plan-upgrade';
+      btnTappuri.textContent = 'アップグレード';
+      btnTappuri.className = 'btn-plan btn-plan-upgrade';
     }
   },
 };

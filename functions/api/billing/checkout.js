@@ -56,7 +56,7 @@ export async function onRequestPost(context) {
 
     // --- モックモード ---
     if (isMockMode(env)) {
-      const frontendUrl = env.FRONTEND_URL || 'http://localhost:8788';
+      const frontendUrl = env.FRONTEND_URL || 'https://photo-nurie.com';
       const mockCheckoutUrl = `${frontendUrl}/app.html#plan?mock_checkout=success&plan_id=${plan_id}&billing_period=${billing_period}&methods=card,paypay,applepay,googlepay`;
 
       console.log(`[モック] Checkoutセッション作成: plan=${plan_id}, period=${billing_period}, user=${user.id}`);
@@ -84,13 +84,13 @@ export async function onRequestPost(context) {
     }
 
     // --- Stripe Checkout Session作成 ---
-    const frontendUrl = env.FRONTEND_URL || 'http://localhost:8788';
+    const frontendUrl = env.FRONTEND_URL || 'https://photo-nurie.com';
 
+    // payment_method_types を指定しない → Stripeダッシュボードで有効化した決済方法が全て自動表示
+    // （card=クレカ/Apple Pay/Google Pay、paypay、konbini 等）
     const session = await stripeRequest('checkout/sessions', 'POST', {
       mode: 'subscription',
       customer: stripeCustomerId,
-      'payment_method_types[0]': 'card',
-      'payment_method_types[1]': 'paypay',
       locale: 'ja',
       'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',
