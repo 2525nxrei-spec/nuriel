@@ -5,7 +5,7 @@
  * - オフライン時: フォールバック表示
  */
 
-const CACHE_NAME = 'nuriel-v1';
+const CACHE_NAME = 'nuriel-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -125,18 +125,18 @@ function offlineFallback() {
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: #FAF5FF;
-      color: #553C9A;
+      background: #FFFAF6;
+      color: #D2735C;
       padding: 2rem;
       text-align: center;
     }
     .offline-icon { font-size: 4rem; margin-bottom: 1rem; }
     h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    p { color: #6B46C1; opacity: 0.7; }
+    p { color: #B85A3D; opacity: 0.7; }
     button {
       margin-top: 1.5rem;
       padding: 0.75rem 2rem;
-      background: #6B46C1;
+      background: #D2735C;
       color: #fff;
       border: none;
       border-radius: 9999px;

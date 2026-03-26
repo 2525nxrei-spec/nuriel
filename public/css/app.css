@@ -313,25 +313,6 @@ img { max-width: 100%; height: auto; display: block; }
   cursor: pointer;
 }
 
-/* テストログインボタン */
-.btn-test-login {
-  display: block;
-  width: 100%;
-  margin-top: 1.25rem;
-  padding: 0.85rem;
-  background: #DC2626;
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 700;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-family: inherit;
-}
-.btn-test-login:hover {
-  background: #B91C1C;
-}
-
 /* --- アップロードエリア --- */
 .upload-area {
   border: 3px dashed var(--border);
