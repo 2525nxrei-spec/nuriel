@@ -99,51 +99,56 @@
         <h2 class="screen-title">ぬりえをつくる</h2>
 
         <!-- アップロードエリア -->
-        <div class="upload-area" id="uploadArea">
-          <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
-          <input type="file" id="cameraInput" accept="image/*" capture="environment" class="file-input-hidden">
-          <h3>写真をえらぶ</h3>
+        <div class="upload-area" id="uploadArea" role="region" aria-label="画像アップロードエリア">
+          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/heic" class="file-input-hidden" aria-label="画像ファイルを選択">
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" class="file-input-hidden" aria-label="カメラで撮影">
+          <h3 id="uploadTitle">写真をえらぶ</h3>
           <div class="upload-buttons">
-            <button type="button" class="upload-btn" id="btnFromLibrary">写真から選ぶ</button>
-            <button type="button" class="upload-btn upload-btn-camera" id="btnFromCamera">カメラで撮る</button>
+            <button type="button" class="upload-btn" id="btnFromLibrary" aria-label="写真ライブラリから画像を選ぶ">写真から選ぶ</button>
+            <button type="button" class="upload-btn upload-btn-camera" id="btnFromCamera" aria-label="カメラで撮影する">カメラで撮る</button>
           </div>
           <p class="upload-note">ドラッグ&ドロップもできます<br>
-          <small>JPEG / PNG / WebP（10MBまで）</small></p>
+          <small>JPEG / PNG / WebP / HEIC（10MBまで）</small></p>
+          <!-- アップロード進捗バー -->
+          <div class="upload-progress-wrap" id="uploadProgressWrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="upload-progress-bar"><div class="upload-progress-fill" id="uploadProgressFill"></div></div>
+            <div class="upload-progress-text" id="uploadProgressText">読み込み中...</div>
+          </div>
         </div>
 
         <!-- プレビュー -->
-        <div class="preview-container" id="previewContainer">
-          <img class="preview-img" id="previewImg" src="" alt="プレビュー">
+        <div class="preview-container" id="previewContainer" role="region" aria-label="画像プレビュー">
+          <img class="preview-img" id="previewImg" src="" alt="アップロードした画像のプレビュー">
           <p class="preview-name" id="previewName"></p>
           <a class="preview-change" id="previewChange">別の写真を選ぶ</a>
         </div>
 
         <!-- スタイル選択 -->
         <h3 class="style-select-title">スタイルを選ぶ</h3>
-        <div class="style-select-grid">
-          <div class="style-option" data-style="gentle" data-premium="false">
+        <div class="style-select-grid" role="radiogroup" aria-label="線画スタイルを選択">
+          <div class="style-option" data-style="gentle" data-premium="false" role="radio" aria-checked="false" tabindex="0">
             <div class="style-option-name">やさしいライン</div>
           </div>
-          <div class="style-option selected" data-style="standard" data-premium="false">
+          <div class="style-option selected" data-style="standard" data-premium="false" role="radio" aria-checked="true" tabindex="0">
             <div class="style-option-name">スタンダード</div>
           </div>
-          <div class="style-option locked" data-style="sketch" data-premium="true">
+          <div class="style-option locked" data-style="sketch" data-premium="true" role="radio" aria-checked="false" aria-disabled="true" tabindex="0">
             <div class="style-option-name">リアルスケッチ</div>
           </div>
-          <div class="style-option locked" data-style="manga" data-premium="true">
+          <div class="style-option locked" data-style="manga" data-premium="true" role="radio" aria-checked="false" aria-disabled="true" tabindex="0">
             <div class="style-option-name">マンガ風</div>
           </div>
         </div>
 
         <!-- 生成ボタン -->
         <div class="generate-section">
-          <button class="btn-generate" id="btnGenerate">線画をつくる</button>
+          <button class="btn-generate" id="btnGenerate" aria-label="写真を線画に変換する">線画をつくる</button>
         </div>
 
         <!-- 変換結果 -->
         <div class="result-section" id="resultSection">
           <h3 class="screen-title mt-3">完成しました</h3>
-          <img class="result-preview" id="resultPreview" src="" alt="線画結果">
+          <img class="result-preview" id="resultPreview" src="" alt="変換された線画の塗り絵">
           <div class="result-actions">
             <button class="btn-primary" id="btnDownloadPdf">PDFをダウンロード</button>
             <button class="btn-secondary" id="btnSaveGallery">保存する</button>
@@ -280,11 +285,11 @@
     </main>
 
     <!-- ========== 下部ナビゲーション ========== -->
-    <nav class="bottom-nav">
-      <button class="nav-item active" data-screen="home">ホーム</button>
-      <button class="nav-item" data-screen="gallery">ギャラリー</button>
-      <button class="nav-item" data-screen="plan">プラン</button>
-      <button class="nav-item" data-screen="settings">設定</button>
+    <nav class="bottom-nav" role="navigation" aria-label="メインナビゲーション">
+      <button class="nav-item active" data-screen="home" aria-label="ホーム画面" aria-current="page">ホーム</button>
+      <button class="nav-item" data-screen="gallery" aria-label="ギャラリー画面">ギャラリー</button>
+      <button class="nav-item" data-screen="plan" aria-label="プラン画面">プラン</button>
+      <button class="nav-item" data-screen="settings" aria-label="設定画面">設定</button>
     </nav>
   </div>
 

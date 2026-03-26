@@ -25,9 +25,21 @@ const CONFIG = {
   // ポーリング最大回数
   POLL_MAX_RETRIES: 60,
   // 対応画像形式
-  ACCEPTED_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/heic'],
+  ACCEPTED_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
   // 最大ファイルサイズ（10MB）
   MAX_FILE_SIZE: 10 * 1024 * 1024,
+  // エラーメッセージ（親切な日本語）
+  ERRORS: {
+    INVALID_FORMAT: '画像形式を確認してください（JPEG, PNG, WebP, HEIC に対応しています）',
+    FILE_TOO_LARGE: '画像は10MB以内にしてください',
+    CONVERT_FAIL: '変換に失敗しました。別の画像でお試しください',
+    NETWORK_ERROR: 'ネット接続を確認してください',
+    CONVERT_TIMEOUT: '変換がタイムアウトしました。時間をおいて再度お試しください',
+    NO_IMAGE: '写真を選んでください',
+    QUOTA_EXCEEDED: '今月の変換枚数を使い切りました。プランのアップグレードをご検討ください',
+    UPLOAD_FAIL: '画像のアップロードに失敗しました。もう一度お試しください',
+    PDF_FAIL: 'PDFの取得に失敗しました。もう一度お試しください',
+  },
 };
 
 /* ==============================================
@@ -76,8 +88,8 @@ const api = {
       return data;
     } catch (err) {
       // ネットワークエラー
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        throw new Error('ネットワークに接続できません。通信環境をご確認ください。');
+      if (err.name === 'TypeError' && (err.message.includes('fetch') || err.message.includes('Failed') || err.message.includes('NetworkError'))) {
+        throw new Error(CONFIG.ERRORS.NETWORK_ERROR);
       }
       throw err;
     }
@@ -184,6 +196,9 @@ const state = {
     remaining: 3,
     total: 3,
   },
+  /* 二重送信防止フラグ */
+  isConverting: false,
+  isUploading: false,
 };
 
 /* ==============================================
@@ -391,9 +406,15 @@ const ui = {
     const target = document.getElementById(`screen-${screen}`);
     if (target) target.classList.add('active');
 
-    // ナビのアクティブ状態更新
+    // ナビのアクティブ状態更新（aria-current含む）
     document.querySelectorAll('.nav-item').forEach((el) => {
-      el.classList.toggle('active', el.dataset.screen === screen);
+      const isActive = el.dataset.screen === screen;
+      el.classList.toggle('active', isActive);
+      if (isActive) {
+        el.setAttribute('aria-current', 'page');
+      } else {
+        el.removeAttribute('aria-current');
+      }
     });
 
     // 画面固有の初期化
@@ -495,28 +516,85 @@ const uploader = {
 
   /** ファイルを検証してプレビュー表示 */
   _handleFile(file) {
-    // 形式チェック
-    if (!CONFIG.ACCEPTED_TYPES.includes(file.type)) {
-      showToast('JPEG / PNG / WebP 形式の画像を選んでください', 'error');
+    // 二重アップロード防止
+    if (state.isUploading) return;
+
+    // 形式チェック（HEICはtype空の場合もあるので拡張子でも判定）
+    const ext = file.name.toLowerCase().split('.').pop();
+    const isHeic = ext === 'heic' || ext === 'heif';
+    if (!CONFIG.ACCEPTED_TYPES.includes(file.type) && !isHeic) {
+      showToast(CONFIG.ERRORS.INVALID_FORMAT, 'error');
       return;
     }
     // サイズチェック
     if (file.size > CONFIG.MAX_FILE_SIZE) {
-      showToast('ファイルサイズは10MB以下にしてください', 'error');
+      showToast(CONFIG.ERRORS.FILE_TOO_LARGE, 'error');
       return;
     }
 
+    state.isUploading = true;
     state.selectedFile = file;
 
-    // プレビュー表示
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      document.getElementById('previewImg').src = e.target.result;
-      document.getElementById('previewName').textContent = file.name;
-      document.getElementById('previewContainer').classList.add('show');
-      document.getElementById('uploadArea').style.display = 'none';
+    // アップロードボタンにローディング表示
+    const btnLibrary = document.getElementById('btnFromLibrary');
+    const btnCamera = document.getElementById('btnFromCamera');
+    if (btnLibrary) btnLibrary.classList.add('loading');
+    if (btnCamera) btnCamera.classList.add('loading');
+
+    // 進捗バー表示
+    const progressWrap = document.getElementById('uploadProgressWrap');
+    const progressFill = document.getElementById('uploadProgressFill');
+    const progressText = document.getElementById('uploadProgressText');
+    if (progressWrap) {
+      progressWrap.classList.add('show');
+      progressFill.style.width = '0%';
+      progressText.textContent = '画像を読み込んでいます...';
+    }
+
+    // プレビュー表示（高速化: createObjectURL使用）
+    const objectUrl = URL.createObjectURL(file);
+    const previewImg = document.getElementById('previewImg');
+    previewImg.src = objectUrl;
+
+    // 画像読み込み完了後にプレビュー表示
+    previewImg.onload = () => {
+      // 進捗100%
+      if (progressFill) progressFill.style.width = '100%';
+      if (progressText) progressText.textContent = '読み込み完了';
+
+      setTimeout(() => {
+        document.getElementById('previewName').textContent = file.name;
+        document.getElementById('previewContainer').classList.add('show');
+        document.getElementById('uploadArea').style.display = 'none';
+        if (progressWrap) progressWrap.classList.remove('show');
+
+        // ローディング解除
+        if (btnLibrary) btnLibrary.classList.remove('loading');
+        if (btnCamera) btnCamera.classList.remove('loading');
+        state.isUploading = false;
+      }, 300);
     };
-    reader.readAsDataURL(file);
+
+    // 読み込み進捗シミュレーション（ObjectURLは即座に読み込まれるため）
+    if (progressFill) {
+      let prog = 0;
+      const progInterval = setInterval(() => {
+        prog = Math.min(prog + 20, 90);
+        progressFill.style.width = `${prog}%`;
+        if (prog >= 90) clearInterval(progInterval);
+      }, 50);
+    }
+
+    // エラー時
+    previewImg.onerror = () => {
+      showToast(CONFIG.ERRORS.INVALID_FORMAT, 'error');
+      if (progressWrap) progressWrap.classList.remove('show');
+      if (btnLibrary) btnLibrary.classList.remove('loading');
+      if (btnCamera) btnCamera.classList.remove('loading');
+      state.isUploading = false;
+      state.selectedFile = null;
+      URL.revokeObjectURL(objectUrl);
+    };
   },
 };
 
@@ -533,9 +611,20 @@ function initStyleSelector() {
         return;
       }
       // 選択を切替
-      options.forEach((o) => o.classList.remove('selected'));
+      options.forEach((o) => {
+        o.classList.remove('selected');
+        o.setAttribute('aria-checked', 'false');
+      });
       opt.classList.add('selected');
+      opt.setAttribute('aria-checked', 'true');
       state.selectedStyle = opt.dataset.style;
+    });
+    // キーボード操作対応（EnterとSpace）
+    opt.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        opt.click();
+      }
     });
   });
 }
@@ -546,22 +635,42 @@ function initStyleSelector() {
 const converter = {
   /** 変換リクエストを送信し、ポーリングで完了を待つ */
   async generate() {
+    // 二重送信防止
+    if (state.isConverting) return;
+
     if (!state.selectedFile) {
-      showToast('写真を選んでください', 'error');
+      showToast(CONFIG.ERRORS.NO_IMAGE, 'error');
       return;
     }
     if (state.plan.remaining <= 0) {
-      showToast('今月の変換枚数を使い切りました', 'error');
+      showToast(CONFIG.ERRORS.QUOTA_EXCEEDED, 'error');
       return;
     }
+
+    state.isConverting = true;
 
     const overlay = document.getElementById('convertingOverlay');
     const progressFill = document.getElementById('progressFill');
     const convertingText = document.getElementById('convertingText');
+    const btnGenerate = document.getElementById('btnGenerate');
+
+    // 変換ボタンにスピナー+テキスト表示
+    const originalBtnText = btnGenerate.textContent;
+    btnGenerate.innerHTML = '<span class="btn-spinner"></span>変換中...';
+    btnGenerate.classList.add('loading-with-text');
+    btnGenerate.disabled = true;
 
     // 変換中オーバーレイ表示
     overlay.classList.add('show');
     progressFill.style.width = '0%';
+
+    // ページ離脱警告を設定
+    const beforeUnloadHandler = (e) => {
+      e.preventDefault();
+      e.returnValue = '変換中です。ページを離れると変換が中断されます。';
+      return e.returnValue;
+    };
+    window.addEventListener('beforeunload', beforeUnloadHandler);
 
     const messages = [
       '線画をつくっています...',
@@ -571,25 +680,30 @@ const converter = {
     ];
 
     try {
-      // ① 画像アップロード
+      // (1) 画像アップロード
       const formData = new FormData();
       formData.append('image', state.selectedFile);
 
-      const uploadResult = await api.post('/upload', formData);
+      let uploadResult;
+      try {
+        uploadResult = await api.post('/upload', formData);
+      } catch (uploadErr) {
+        throw new Error(CONFIG.ERRORS.UPLOAD_FAIL);
+      }
       const imageKey = uploadResult.imageKey;
 
-      // ② 線画変換リクエスト送信
+      // (2) 線画変換リクエスト送信
       const convertResult = await api.post('/convert', {
         imageKey,
         style: state.selectedStyle,
       });
       const generationId = convertResult.generationId;
 
-      // ③ ポーリングでステータス確認
+      // (3) ポーリングでステータス確認
       let retries = 0;
       const poll = async () => {
         if (retries >= CONFIG.POLL_MAX_RETRIES) {
-          throw new Error('変換がタイムアウトしました。もう一度お試しください。');
+          throw new Error(CONFIG.ERRORS.CONVERT_TIMEOUT);
         }
 
         const progress = Math.min(10 + retries * 3, 95);
@@ -600,12 +714,11 @@ const converter = {
 
         if (result.status === 'completed') {
           progressFill.style.width = '100%';
-          // 完了後、結果（lineArtBase64含む）を取得
           const fullResult = await api.get(`/convert/${generationId}/result`);
           return fullResult;
         }
         if (result.status === 'failed') {
-          throw new Error(result.error || '変換に失敗しました。');
+          throw new Error(CONFIG.ERRORS.CONVERT_FAIL);
         }
 
         retries++;
@@ -614,7 +727,7 @@ const converter = {
 
       const result = await poll();
 
-      // ③ 結果表示
+      // (4) 結果表示
       overlay.classList.remove('show');
       this._showResult(result);
 
@@ -626,7 +739,19 @@ const converter = {
 
     } catch (err) {
       overlay.classList.remove('show');
-      showToast(err.message, 'error');
+      // ネットワークエラーの場合は親切メッセージ
+      const msg = (err.message.includes('fetch') || err.message.includes('NetworkError'))
+        ? CONFIG.ERRORS.NETWORK_ERROR
+        : err.message;
+      showToast(msg, 'error');
+    } finally {
+      // ページ離脱警告を解除
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+      // ボタンを元に戻す
+      btnGenerate.textContent = originalBtnText;
+      btnGenerate.classList.remove('loading-with-text');
+      btnGenerate.disabled = false;
+      state.isConverting = false;
     }
   },
 
@@ -653,7 +778,7 @@ const converter = {
         headers: { 'Authorization': `Bearer ${token}` },
       })
         .then(res => {
-          if (!res.ok) throw new Error('PDF取得に失敗しました');
+          if (!res.ok) throw new Error(CONFIG.ERRORS.PDF_FAIL);
           return res.blob();
         })
         .then(blob => {
@@ -664,7 +789,7 @@ const converter = {
           a.click();
           URL.revokeObjectURL(url);
         })
-        .catch(err => showToast(err.message, 'error'));
+        .catch(err => showToast(err.message || CONFIG.ERRORS.PDF_FAIL, 'error'));
     };
 
     // ギャラリーに保存（変換完了時点で自動的にgenerationsに保存されるため、メッセージのみ）
@@ -774,7 +899,7 @@ const gallery = {
           headers: { 'Authorization': `Bearer ${token}` },
         })
           .then(res => {
-            if (!res.ok) throw new Error('PDF取得に失敗しました');
+            if (!res.ok) throw new Error(CONFIG.ERRORS.PDF_FAIL);
             return res.blob();
           })
           .then(blob => {
@@ -785,7 +910,7 @@ const gallery = {
             a.click();
             URL.revokeObjectURL(url);
           })
-          .catch(err => showToast(err.message, 'error'));
+          .catch(err => showToast(err.message || CONFIG.ERRORS.PDF_FAIL, 'error'));
       } else {
         showToast('PDFがまだ生成されていません', 'error');
       }
@@ -1008,10 +1133,13 @@ function bindEvents() {
 async function handlePlanChange(planName) {
   if (state.plan.name === planName) return;
 
-  /* ボタンをローディング状態にする */
+  /* ボタンをローディング状態にする（disabled + 「処理中...」テキスト） */
   const btnId = planName === 'たっぷり' ? 'btnPlanTappuri' : 'btnPlanOtameshi';
   const btn = document.getElementById(btnId);
+  let originalBtnText = '';
   if (btn) {
+    originalBtnText = btn.textContent;
+    btn.textContent = '処理中...';
     btn.classList.add('loading');
     btn.disabled = true;
   }
@@ -1052,6 +1180,7 @@ async function handlePlanChange(planName) {
     showToast(err.message, 'error');
   } finally {
     if (btn) {
+      btn.textContent = originalBtnText;
       btn.classList.remove('loading');
       btn.disabled = false;
     }
@@ -1104,8 +1233,10 @@ function updateStyleLocks() {
   premiumStyles.forEach((el) => {
     if (state.plan.name === 'たっぷり') {
       el.classList.remove('locked');
+      el.setAttribute('aria-disabled', 'false');
     } else {
       el.classList.add('locked');
+      el.setAttribute('aria-disabled', 'true');
     }
   });
 }

@@ -317,10 +317,6 @@ img { max-width: 100%; height: auto; display: block; }
   background: #fff;
   position: relative;
 }
-.upload-area.dragover {
-  border-color: var(--primary-light);
-  background: var(--primary-pale);
-}
 .upload-area h3 {
   font-size: 1rem;
   color: var(--text);

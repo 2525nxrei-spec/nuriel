@@ -541,6 +541,9 @@ img { max-width: 100%; height: auto; display: block; }
   background: var(--primary-light);
   text-decoration: none;
 }
+.btn-sub:active {
+  transform: scale(0.97);
+}
 
 @media (min-width: 640px) {
   .pricing-grid {

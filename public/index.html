@@ -43,7 +43,7 @@
   <header class="lp-header" id="header">
     <div class="container">
       <div class="lp-logo">ヌリエル</div>
-      <nav class="lp-nav">
+      <nav class="lp-nav" aria-label="サイトナビゲーション">
         <a href="#howto">使い方</a>
         <a href="#styles">スタイル</a>
         <a href="#pricing">料金</a>
@@ -62,11 +62,11 @@
 
       <div class="hero-visual">
         <div class="hero-card hero-card-photo">
-          <img src="/assets/hero_dog.jpg" alt="ペット写真" id="heroPhoto" class="hero-card-img">
+          <img src="/assets/hero_dog.jpg" alt="犬のペット写真（変換前）" id="heroPhoto" class="hero-card-img">
         </div>
         <span class="hero-arrow">→</span>
         <div class="hero-card hero-card-line" id="heroLineCard">
-          <img src="/assets/hero_dog.jpg" alt="" id="heroLine" class="hero-card-img hero-card-lineart">
+          <img src="/assets/hero_dog.jpg" alt="線画に変換された犬の塗り絵" id="heroLine" class="hero-card-img hero-card-lineart">
         </div>
         <div class="hero-pencil" id="heroPencil">✏️</div>
       </div>
@@ -75,7 +75,7 @@
         <button class="pet-switch-btn" data-pet="cat">ねこちゃん</button>
       </div>
 
-      <a href="/app.html" class="btn-cta fade-in">無料で試してみる</a>
+      <a href="/app.html" class="btn-cta fade-in" aria-label="ヌリエルを無料で試してみる">無料で試してみる</a>
       <p class="hero-note">3枚まで無料で使えます</p>
     </div>
   </section>
@@ -240,7 +240,7 @@
     <div class="container">
       <h2 class="final-cta-title">うちの子を、ぬりえにしよう</h2>
       <p class="final-cta-sub">あの写真が、世界にひとつだけの塗り絵に。</p>
-      <a href="/app.html" class="btn-cta final-cta-btn">無料で試してみる</a>
+      <a href="/app.html" class="btn-cta final-cta-btn" aria-label="ヌリエルを無料で試してみる">無料で試してみる</a>
     </div>
   </section>
 
@@ -448,11 +448,18 @@
     })();
 
     document.querySelectorAll('.faq-question').forEach((btn) => {
+      btn.setAttribute('aria-expanded', 'false');
       btn.addEventListener('click', () => {
         const item = btn.closest('.faq-item');
         const isOpen = item.classList.contains('open');
-        document.querySelectorAll('.faq-item').forEach((i) => i.classList.remove('open'));
-        if (!isOpen) item.classList.add('open');
+        document.querySelectorAll('.faq-item').forEach((i) => {
+          i.classList.remove('open');
+          i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+        });
+        if (!isOpen) {
+          item.classList.add('open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
       });
     });
 
