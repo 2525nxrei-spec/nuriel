@@ -28,7 +28,7 @@ bucket_name = "nuriel-storage"
 # 環境変数（シークレットは wrangler secret put で設定）
 # ============================================================
 [vars]
-FRONTEND_URL = "https://nuriel.pages.dev"
+FRONTEND_URL = "https://photo-nurie.com"
 
 # 以下はシークレットとして設定（wrangler secret put コマンド使用）
 # REPLICATE_API_TOKEN    — Replicate API トークン
