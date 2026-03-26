@@ -900,6 +900,120 @@ img { max-width: 100%; height: auto; display: block; }
   to { opacity: 0; transform: translateY(-10px); }
 }
 
+/* --- 全CTA共通 :active フィードバック --- */
+.btn-primary:active,
+.btn-secondary:active,
+.btn-generate:active,
+.btn-plan:active:not(.btn-plan-current),
+.btn-settings:active,
+.btn-logout:active,
+.btn-danger:active,
+.upload-btn:active,
+.nav-item:active {
+  transform: scale(0.97);
+}
+
+/* --- フォーカス可視化（アクセシビリティ） --- */
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-generate:focus-visible,
+.btn-plan:focus-visible,
+.btn-settings:focus-visible,
+.btn-logout:focus-visible,
+.btn-danger:focus-visible,
+.btn-withdraw:focus-visible,
+.upload-btn:focus-visible,
+.nav-item:focus-visible,
+.style-option:focus-visible,
+.form-input:focus-visible,
+.billing-toggle-btn:focus-visible,
+.faq-question:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* --- アップロードボタン ローディング状態 --- */
+.upload-btn.loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+}
+.upload-btn.loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* --- ドラッグ&ドロップ強調フィードバック --- */
+.upload-area.dragover {
+  border-color: var(--primary);
+  background: var(--primary-pale);
+  box-shadow: 0 0 0 4px rgba(210, 115, 92, 0.15);
+}
+.upload-area.dragover h3::after {
+  content: ' ドロップしてアップロード';
+  color: var(--primary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* --- アップロード進捗バー --- */
+.upload-progress-wrap {
+  display: none;
+  margin-top: 1rem;
+  width: 100%;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.upload-progress-wrap.show {
+  display: block;
+}
+.upload-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.upload-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--primary);
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+.upload-progress-text {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  text-align: center;
+  margin-top: 0.3rem;
+}
+
+/* --- 変換ボタン テキスト付きローディング --- */
+.btn-generate.loading-with-text {
+  pointer-events: none;
+  opacity: 0.8;
+}
+.btn-generate.loading-with-text .btn-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
 /* --- 汎用ユーティリティ --- */
 .hidden { display: none !important; }
 .text-center { text-align: center; }
