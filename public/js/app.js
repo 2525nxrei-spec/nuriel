@@ -1039,7 +1039,8 @@ function updateStyleLocks() {
 async function registerSW() {
   if ('serviceWorker' in navigator) {
     try {
-      await navigator.serviceWorker.register('/sw.js');
+      const reg = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+      reg.update();
     } catch (err) {
       console.warn('Service Worker 登録失敗:', err);
     }

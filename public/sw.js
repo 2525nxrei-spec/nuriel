@@ -1,11 +1,10 @@
 /**
  * ヌリエル Service Worker
- * - 静的アセット: Cache First
- * - API呼び出し: Network First
+ * - 全リクエスト: Network First（常に最新を取得、オフライン時のみキャッシュ）
  * - オフライン時: フォールバック表示
  */
 
-const CACHE_NAME = 'nuriel-v2';
+const CACHE_NAME = 'nuriel-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -16,11 +15,8 @@ const STATIC_ASSETS = [
   '/manifest.json'
 ];
 
-// API のベースパスパターン
-const API_PATTERN = /\/api\//;
-
 /**
- * インストール: 静的アセットをキャッシュ
+ * インストール: 静的アセットをキャッシュ（オフライン用）
  */
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -28,12 +24,11 @@ self.addEventListener('install', (event) => {
       return cache.addAll(STATIC_ASSETS);
     })
   );
-  // 即座にアクティブ化
   self.skipWaiting();
 });
 
 /**
- * アクティベート: 古いキャッシュを削除
+ * アクティベート: 古いキャッシュを全削除
  */
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -45,67 +40,34 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  // 全クライアントを即座に制御下に置く
   self.clients.claim();
 });
 
 /**
- * フェッチ: リクエスト種別に応じた戦略
+ * フェッチ: 全リクエストNetwork First
+ * ネットワーク優先で常に最新を返す。オフライン時のみキャッシュから返す。
  */
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
+  if (event.request.method !== 'GET') return;
 
-  // POST等はキャッシュ対象外
-  if (request.method !== 'GET') return;
-
-  // API リクエスト → Network First
-  if (API_PATTERN.test(request.url)) {
-    event.respondWith(networkFirst(request));
-    return;
-  }
-
-  // 静的アセット → Cache First
-  event.respondWith(cacheFirst(request));
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, clone);
+          });
+        }
+        return response;
+      })
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        return offlineFallback();
+      })
+  );
 });
-
-/**
- * Cache First 戦略
- * キャッシュにあればそれを返す。なければネットワーク取得してキャッシュ保存
- */
-async function cacheFirst(request) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
-
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    return offlineFallback();
-  }
-}
-
-/**
- * Network First 戦略
- * ネットワーク優先。失敗したらキャッシュから返す
- */
-async function networkFirst(request) {
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    return offlineFallback();
-  }
-}
 
 /**
  * オフライン時のフォールバックレスポンス
@@ -120,7 +82,7 @@ function offlineFallback() {
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: system-ui, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      font-family: "Zen Maru Gothic", system-ui, "Hiragino Kaku Gothic ProN", sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -139,7 +101,7 @@ function offlineFallback() {
       background: #D2735C;
       color: #fff;
       border: none;
-      border-radius: 9999px;
+      border-radius: 12px;
       font-size: 1rem;
       cursor: pointer;
     }

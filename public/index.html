@@ -401,6 +401,13 @@
         if (!isOpen) item.classList.add('open');
       });
     });
+
+    /* Service Worker更新 */
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+        .then(function(reg) { reg.update(); })
+        .catch(function() {});
+    }
   </script>
 
 </body>
