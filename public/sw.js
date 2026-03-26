@@ -4,7 +4,7 @@
  * - オフライン時: フォールバック表示
  */
 
-const CACHE_NAME = 'nuriel-v3';
+const CACHE_NAME = 'nuriel-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
