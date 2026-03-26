@@ -1040,6 +1040,19 @@ function bindEvents() {
     }
     if (!valid) return;
 
+    // 新規登録時の追加チェック
+    if (mode === 'register') {
+      if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+        passError.textContent = 'パスワードは英字と数字の両方を含めてください';
+        return;
+      }
+      const termsCheck = document.getElementById('authTerms');
+      if (termsCheck && !termsCheck.checked) {
+        document.getElementById('authTermsError').textContent = '利用規約への同意が必要です';
+        return;
+      }
+    }
+
     btn.classList.add('loading');
     btn.disabled = true;
 
@@ -1059,6 +1072,18 @@ function bindEvents() {
       btn.classList.remove('loading');
       btn.disabled = false;
     }
+  });
+
+  // --- 認証パスワード強度チェック ---
+  document.getElementById('authPassword').addEventListener('input', function() {
+    const pw = this.value;
+    const el = document.getElementById('authPwStrength');
+    const mode = document.getElementById('authForm').dataset.mode;
+    if (!el || mode === 'login') return;
+    if (pw.length === 0) { el.textContent = ''; }
+    else if (pw.length < 8) { el.textContent = 'あと' + (8 - pw.length) + '文字必要です'; el.style.color = '#dc2626'; }
+    else if (!/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw)) { el.textContent = '英字と数字の両方を含めてください'; el.style.color = '#d97706'; }
+    else { el.textContent = 'OK'; el.style.color = '#16a34a'; }
   });
 
   // --- ナビゲーション ---
@@ -1369,6 +1394,26 @@ async function init() {
   // 未ログイン → 認証画面表示
   ui.showAuth('login');
 }
+
+// セッションタイムアウト（24時間操作なしでログアウト）
+(function() {
+  const TIMEOUT = 24 * 60 * 60 * 1000;
+  function resetTimer() { localStorage.setItem('nuriel_last_activity', Date.now()); }
+  function checkTimeout() {
+    const last = parseInt(localStorage.getItem('nuriel_last_activity') || '0', 10);
+    if (last && Date.now() - last > TIMEOUT && localStorage.getItem('nuriel_token')) {
+      localStorage.removeItem('nuriel_token');
+      localStorage.removeItem('nuriel_user');
+      alert('長時間操作がなかったため、セキュリティのためログアウトしました。');
+      window.location.reload();
+    }
+  }
+  checkTimeout();
+  resetTimer();
+  ['click', 'keydown', 'scroll', 'touchstart'].forEach(e => {
+    document.addEventListener(e, resetTimer, { passive: true });
+  });
+})();
 
 // DOM 準備完了後に初期化
 document.addEventListener('DOMContentLoaded', init);
