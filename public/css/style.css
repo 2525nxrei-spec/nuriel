@@ -126,6 +126,10 @@ img { max-width: 100%; height: auto; display: block; }
 
 @media (max-width: 640px) {
   .lp-nav a:not(.header-cta) { display: none; }
+  .lp-header .container { height: 48px; }
+  .hero { padding-top: 68px; padding-bottom: 2.5rem; }
+  .hero h1 { font-size: 2rem; margin-top: 1rem; }
+  .hero-sub { font-size: 0.95rem; line-height: 1.8; }
 }
 
 /* --- ヒーロー --- */
@@ -252,8 +256,8 @@ img { max-width: 100%; height: auto; display: block; }
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s ease;
-  top: 30%;
-  left: calc(50% + -25%);
+  top: 35%;
+  left: calc(50% - 25%);
 }
 .hero-pencil.animating {
   opacity: 1;
@@ -301,6 +305,37 @@ img { max-width: 100%; height: auto; display: block; }
   font-size: 0.85rem;
   color: var(--text-light);
   margin-top: 0.75rem;
+}
+
+/* モバイル小画面対応 */
+@media (max-width: 400px) {
+  .hero-visual { gap: 0.5rem; }
+  .hero-card { max-width: 130px; }
+  .hero-arrow { font-size: 1.2rem; }
+  .hero-pencil { font-size: 1.4rem; }
+  .floating-frame { opacity: 0.2; }
+  .hero h1 { font-size: 1.75rem; }
+  .hero-sub { font-size: 0.88rem; }
+  .section-title { font-size: 1.35rem; }
+  .howto-item { font-size: 0.95rem; }
+  .styles-list-item dd { font-size: 0.9rem; }
+  .plan-card { padding: 1.5rem 1.25rem; }
+  .plan-price { font-size: 1.6rem; }
+  .final-cta-title { font-size: 1.4rem; }
+  .btn-cta { padding: 0.85rem 2rem; font-size: 1rem; }
+}
+
+@media (max-width: 640px) {
+  .hero-visual { max-width: 340px; }
+  .hero-card { max-width: 150px; }
+  .howto { padding: 2.5rem 0; }
+  .styles { padding: 2.5rem 0; }
+  .pricing { padding: 3rem 0; }
+  .faq { padding: 2.5rem 0; }
+  .final-cta { padding: 2.5rem 0; }
+  .floating-frame { opacity: 0.25; }
+  .footer-links { gap: 1rem; }
+  .footer-links a { font-size: 0.8rem; }
 }
 
 @media (min-width: 768px) {
@@ -581,4 +616,28 @@ img { max-width: 100%; height: auto; display: block; }
 .footer-copy {
   font-size: 0.75rem;
   opacity: 0.4;
+}
+
+/* --- モバイルタッチ最適化 --- */
+@media (pointer: coarse) {
+  .btn-cta, .btn-sub, .header-cta {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .faq-question {
+    min-height: 52px;
+  }
+  .pet-switch-btn {
+    min-height: 44px;
+    padding: 0.5rem 1.4rem;
+  }
+}
+
+/* --- iOS Safari / PWA 対応 --- */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .lp-footer {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
 }
