@@ -942,6 +942,30 @@ function bindEvents() {
     converter.generate();
   });
 
+  // --- 月額/年額切り替えトグル（アプリ内） ---
+  document.querySelectorAll('#appBillingToggle .billing-toggle-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#appBillingToggle .billing-toggle-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      const period = btn.dataset.period;
+      const nameOtameshi = document.getElementById('appPlanNameOtameshi');
+      const descOtameshi = document.getElementById('appPlanDescOtameshi');
+      const nameTappuri = document.getElementById('appPlanNameTappuri');
+      const descTappuri = document.getElementById('appPlanDescTappuri');
+      if (period === 'yearly') {
+        nameOtameshi.textContent = 'おためし — ¥1,000/年';
+        descOtameshi.textContent = '月3枚 / 基本スタイル2種 / 月額換算¥83';
+        nameTappuri.textContent = 'たっぷり — ¥3,000/年';
+        descTappuri.textContent = '月20枚 / 全4スタイル / 月額換算¥250';
+      } else {
+        nameOtameshi.textContent = 'おためし — ¥100/月';
+        descOtameshi.textContent = '月3枚 / 基本スタイル2種 / 年額¥1,000（2ヶ月おトク）';
+        nameTappuri.textContent = 'たっぷり — ¥300/月';
+        descTappuri.textContent = '月20枚 / 全4スタイル / 年額¥3,000（2ヶ月おトク）';
+      }
+    });
+  });
+
   // --- プランボタン ---
   document.getElementById('btnPlanOtameshi').addEventListener('click', () => {
     handlePlanChange('おためし');
@@ -999,9 +1023,13 @@ async function handlePlanChange(planName) {
 
     /* Stripe Checkout セッション作成
        バックエンドでPayPay / Apple Pay / Google Pay が自動的に有効化される */
+    /* ユーザーが選択した請求期間を取得 */
+    const activeToggle = document.querySelector('#appBillingToggle .billing-toggle-btn.active');
+    const billingPeriod = activeToggle ? activeToggle.dataset.period : 'monthly';
+
     const result = await api.post('/billing/checkout', {
       plan_id: planId,
-      billing_period: 'monthly',
+      billing_period: billingPeriod,
     });
 
     if (result.checkout_url) {

@@ -412,6 +412,52 @@ img { max-width: 100%; height: auto; display: block; }
   padding: 4.5rem 0;
   background: #fff;
 }
+/* --- 月額/年額切り替えトグル --- */
+.billing-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin: 0 auto 2rem;
+  background: var(--primary-pale);
+  border-radius: 999px;
+  padding: 4px;
+  max-width: 320px;
+}
+.billing-toggle-btn {
+  flex: 1;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: inherit;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+}
+.billing-toggle-btn.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(210, 115, 92, 0.3);
+}
+.billing-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #FF6B4A;
+  color: #fff;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.billing-toggle-btn.active .billing-badge {
+  background: #fff;
+  color: var(--primary);
+}
+
 .pricing-grid {
   display: grid;
   grid-template-columns: 1fr;

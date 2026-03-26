@@ -130,11 +130,17 @@
     <div class="container">
       <h2 class="section-title">料金</h2>
 
+      <!-- 月額/年額切り替えトグル -->
+      <div class="billing-toggle" id="lpBillingToggle">
+        <button class="billing-toggle-btn active" data-period="monthly">月額</button>
+        <button class="billing-toggle-btn" data-period="yearly">年額<span class="billing-badge">2ヶ月分おトク</span></button>
+      </div>
+
       <div class="pricing-grid">
         <div class="plan-card">
           <div class="plan-name">おためし</div>
-          <div class="plan-price">¥100<small>/月</small></div>
-          <div class="plan-annual">年額 ¥1,000（2ヶ月分おトク）</div>
+          <div class="plan-price" id="lpPriceOtameshi">¥100<small>/月</small></div>
+          <div class="plan-annual" id="lpAnnualOtameshi">年額 ¥1,000（2ヶ月分おトク）</div>
           <ul class="plan-features">
             <li>月3枚まで</li>
             <li>やさしいライン / スタンダード</li>
@@ -145,8 +151,8 @@
 
         <div class="plan-card popular">
           <div class="plan-name">たっぷり</div>
-          <div class="plan-price">¥300<small>/月</small></div>
-          <div class="plan-annual">年額 ¥3,000（2ヶ月分おトク）</div>
+          <div class="plan-price" id="lpPriceTappuri">¥300<small>/月</small></div>
+          <div class="plan-annual" id="lpAnnualTappuri">年額 ¥3,000（2ヶ月分おトク）</div>
           <ul class="plan-features">
             <li>月20枚まで</li>
             <li>全4スタイル対応</li>
@@ -411,6 +417,35 @@
       });
     }, { threshold: 0.15 });
     document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
+
+    /* 月額/年額切り替えトグル */
+    (function() {
+      var toggleBtns = document.querySelectorAll('#lpBillingToggle .billing-toggle-btn');
+      var priceOtameshi = document.getElementById('lpPriceOtameshi');
+      var priceOtameshiAnnual = document.getElementById('lpAnnualOtameshi');
+      var priceTappuri = document.getElementById('lpPriceTappuri');
+      var priceTappuriAnnual = document.getElementById('lpAnnualTappuri');
+
+      toggleBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          toggleBtns.forEach(function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          var period = btn.dataset.period;
+
+          if (period === 'yearly') {
+            priceOtameshi.innerHTML = '¥1,000<small>/年</small>';
+            priceOtameshiAnnual.textContent = '月額換算 ¥83';
+            priceTappuri.innerHTML = '¥3,000<small>/年</small>';
+            priceTappuriAnnual.textContent = '月額換算 ¥250';
+          } else {
+            priceOtameshi.innerHTML = '¥100<small>/月</small>';
+            priceOtameshiAnnual.textContent = '年額 ¥1,000（2ヶ月分おトク）';
+            priceTappuri.innerHTML = '¥300<small>/月</small>';
+            priceTappuriAnnual.textContent = '年額 ¥3,000（2ヶ月分おトク）';
+          }
+        });
+      });
+    })();
 
     document.querySelectorAll('.faq-question').forEach((btn) => {
       btn.addEventListener('click', () => {

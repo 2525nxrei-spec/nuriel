@@ -172,6 +172,12 @@
           <div class="current-plan-detail" id="currentPlanDetail">今月の残り: 3 / 3 枚</div>
         </div>
 
+        <!-- 月額/年額切り替えトグル -->
+        <div class="billing-toggle" id="appBillingToggle">
+          <button class="billing-toggle-btn active" data-period="monthly">月額</button>
+          <button class="billing-toggle-btn" data-period="yearly">年額<span class="billing-badge">2ヶ月分おトク</span></button>
+        </div>
+
         <!-- プラン選択 -->
         <div class="plan-options">
           <div class="plan-option-card plan-free-card" id="planFreeCard">
@@ -183,15 +189,15 @@
           </div>
           <div class="plan-option-card">
             <div class="plan-option-info">
-              <h3>おためし — ¥100/月</h3>
-              <p>月3枚 / 基本スタイル2種 / 年額¥1,000（2ヶ月おトク）</p>
+              <h3 id="appPlanNameOtameshi">おためし — ¥100/月</h3>
+              <p id="appPlanDescOtameshi">月3枚 / 基本スタイル2種 / 年額¥1,000（2ヶ月おトク）</p>
             </div>
             <button class="btn-plan btn-plan-current" id="btnPlanOtameshi">利用中</button>
           </div>
           <div class="plan-option-card">
             <div class="plan-option-info">
-              <h3>たっぷり — ¥300/月</h3>
-              <p>月20枚 / 全4スタイル / 年額¥3,000（2ヶ月おトク）</p>
+              <h3 id="appPlanNameTappuri">たっぷり — ¥300/月</h3>
+              <p id="appPlanDescTappuri">月20枚 / 全4スタイル / 年額¥3,000（2ヶ月おトク）</p>
             </div>
             <button class="btn-plan btn-plan-upgrade" id="btnPlanTappuri">アップグレード</button>
           </div>

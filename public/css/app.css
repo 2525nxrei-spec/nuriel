@@ -700,6 +700,51 @@ img { max-width: 100%; height: auto; display: block; }
   opacity: 0.8;
   margin-top: 0.5rem;
 }
+/* --- 月額/年額切り替えトグル（アプリ内） --- */
+.billing-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin: 0 auto 1.25rem;
+  background: var(--primary-pale, #FDF1ED);
+  border-radius: 999px;
+  padding: 4px;
+  max-width: 300px;
+}
+.billing-toggle-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--warm-gray, #7A6E6A);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.billing-toggle-btn.active {
+  background: var(--primary, #D2735C);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(210, 115, 92, 0.3);
+}
+.billing-badge {
+  display: inline-block;
+  margin-left: 0.3rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: #FF6B4A;
+  color: #fff;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.billing-toggle-btn.active .billing-badge {
+  background: #fff;
+  color: var(--primary, #D2735C);
+}
+
 .plan-options {
   display: flex;
   flex-direction: column;
