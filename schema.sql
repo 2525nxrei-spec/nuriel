@@ -106,5 +106,5 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_webhooks_stripe_event_id ON webhooks_log(s
 INSERT OR REPLACE INTO plans (id, name, price_monthly, price_yearly, monthly_limit, styles_allowed, gallery_limit, stripe_price_id_monthly, stripe_price_id_yearly)
 VALUES
     ('free', '無料体験', 0, 0, 1, '["gentle"]', 3, NULL, NULL),
-    ('otameshi', 'おためし', 100, 1000, 3, '["gentle","standard"]', 10, 'price_otameshi_monthly', 'price_otameshi_yearly'),
-    ('tappuri', 'たっぷり', 300, 3000, 20, '["gentle","standard","sketch","manga"]', -1, 'price_tappuri_monthly', 'price_tappuri_yearly');
+    ('otameshi', 'おためし', 100, 1000, 3, '["gentle","standard"]', 10, 'price_1TF9k09Fc8Hnuaoko8QNE9PR', NULL),
+    ('tappuri', 'たっぷり', 300, 3000, 20, '["gentle","standard","sketch","manga"]', -1, 'price_1TF9k09Fc8HnuaokNAzdNPRv', NULL);

@@ -42,18 +42,9 @@
       <p class="hero-sub">お気に入りのペット写真を送るだけで、<br>塗り絵にぴったりの線画ができあがります。<br>お子さんと一緒に塗るもよし、ひとりで没頭するもよし。</p>
 
       <div class="hero-visual">
-        <div class="hero-card hero-card-photo">
-          <img src="/assets/hero_dog.jpg" alt="ペット写真" id="heroPhoto" class="hero-card-img">
-        </div>
+        <div class="hero-card hero-card-photo">🐕</div>
         <span class="hero-arrow">→</span>
-        <div class="hero-card hero-card-line" id="heroLineCard">
-          <img src="/assets/hero_dog.jpg" alt="" id="heroLine" class="hero-card-img hero-card-lineart">
-        </div>
-        <div class="hero-pencil" id="heroPencil">✏️</div>
-      </div>
-      <div class="hero-pet-switch">
-        <button class="pet-switch-btn active" data-pet="dog">わんちゃん</button>
-        <button class="pet-switch-btn" data-pet="cat">ねこちゃん</button>
+        <div class="hero-card hero-card-line"><span class="card-pet">🐕</span></div>
       </div>
 
       <a href="/app.html" class="btn-cta fade-in">無料で試してみる</a>
@@ -236,12 +227,9 @@
   <script>
     /* 背景の浮遊ペット写真（額縁付き） */
     (function() {
-      var total = 33;
+      var total = 34;
       var container = document.getElementById('heroBg');
-      var isMobile = window.innerWidth < 768;
-      var count = isMobile ? 10 : 20;
-      var minSize = isMobile ? 70 : 100;
-      var sizeRange = isMobile ? 40 : 60;
+      var count = 45;
       for (var i = 0; i < count; i++) {
         var num = (i % total) + 1;
         var src = '/assets/pets/pet_' + String(num).padStart(2, '0') + '.jpg';
@@ -252,9 +240,9 @@
         img.alt = '';
         img.loading = 'lazy';
         frame.appendChild(img);
-        frame.style.left = Math.random() * 85 + '%';
-        frame.style.top = Math.random() * 85 + '%';
-        var size = minSize + Math.random() * sizeRange;
+        frame.style.left = Math.random() * 95 + '%';
+        frame.style.top = Math.random() * 90 + '%';
+        var size = 40 + Math.random() * 40;
         frame.style.width = size + 'px';
         frame.style.animationDuration = (10 + Math.random() * 15) + 's';
         frame.style.animationDelay = (Math.random() * -25) + 's';
@@ -262,121 +250,6 @@
         container.appendChild(frame);
       }
     })();
-
-    /* 線画変換（Canvasエッジ検出 + 色鉛筆風着色） */
-    function toLineart(imgSrc, card) {
-      var img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = function() {
-        var w = img.naturalWidth, h = img.naturalHeight;
-
-        /* 線画キャンバス */
-        var c1 = document.createElement('canvas');
-        c1.width = w; c1.height = h;
-        var ctx1 = c1.getContext('2d');
-        ctx1.drawImage(img, 0, 0);
-        var orig = ctx1.getImageData(0, 0, w, h);
-
-        /* ぼかし用キャンバス */
-        var c2 = document.createElement('canvas');
-        c2.width = w; c2.height = h;
-        var ctx2 = c2.getContext('2d');
-        ctx2.filter = 'blur(1px)';
-        ctx2.drawImage(img, 0, 0);
-        var blurred = ctx2.getImageData(0, 0, w, h);
-
-        /* 差分で輪郭抽出 → 白地に黒い線 */
-        var lineData = ctx1.createImageData(w, h);
-        for (var i = 0; i < orig.data.length; i += 4) {
-          var rD = Math.abs(orig.data[i] - blurred.data[i]);
-          var gD = Math.abs(orig.data[i+1] - blurred.data[i+1]);
-          var bD = Math.abs(orig.data[i+2] - blurred.data[i+2]);
-          var edge = (rD + gD + bD) / 3;
-          var val = edge > 8 ? Math.max(0, 255 - edge * 10) : 255;
-          lineData.data[i] = val;
-          lineData.data[i+1] = val;
-          lineData.data[i+2] = val;
-          lineData.data[i+3] = 255;
-        }
-        ctx1.putImageData(lineData, 0, 0);
-
-        /* 色鉛筆風の着色キャンバス */
-        var c3 = document.createElement('canvas');
-        c3.width = w; c3.height = h;
-        var ctx3 = c3.getContext('2d');
-        ctx3.drawImage(img, 0, 0);
-        var colored = ctx3.getImageData(0, 0, w, h);
-        for (var i = 0; i < colored.data.length; i += 4) {
-          /* 彩度を落として明るくする（色鉛筆の淡い感じ） */
-          var r = colored.data[i], g = colored.data[i+1], b = colored.data[i+2];
-          var avg = (r + g + b) / 3;
-          colored.data[i]   = Math.min(255, Math.round(r * 0.4 + avg * 0.3 + 180 * 0.3));
-          colored.data[i+1] = Math.min(255, Math.round(g * 0.4 + avg * 0.3 + 180 * 0.3));
-          colored.data[i+2] = Math.min(255, Math.round(b * 0.4 + avg * 0.3 + 180 * 0.3));
-        }
-        /* 線画を上に乗算合成 */
-        for (var i = 0; i < lineData.data.length; i += 4) {
-          colored.data[i]   = Math.round(colored.data[i] * lineData.data[i] / 255);
-          colored.data[i+1] = Math.round(colored.data[i+1] * lineData.data[i+1] / 255);
-          colored.data[i+2] = Math.round(colored.data[i+2] * lineData.data[i+2] / 255);
-        }
-        ctx3.putImageData(colored, 0, 0);
-
-        /* カードに表示（線画→色鉛筆のアニメーション） */
-        var existing = card.querySelectorAll('canvas');
-        existing.forEach(function(el) { el.remove(); });
-
-        c1.className = 'hero-canvas hero-canvas-line';
-        c3.className = 'hero-canvas hero-canvas-colored';
-        card.appendChild(c1);
-        card.appendChild(c3);
-
-        /* 色鉛筆で塗るアニメーション開始 */
-        startColoringAnimation(card);
-      };
-      img.src = imgSrc;
-    }
-
-    function startColoringAnimation(card) {
-      var pencil = document.getElementById('heroPencil');
-      var colored = card.querySelector('.hero-canvas-colored');
-      if (!colored) return;
-      colored.style.clipPath = 'inset(0 100% 0 0)';
-      colored.style.opacity = '1';
-      pencil.classList.add('animating');
-
-      var progress = 0;
-      var interval = setInterval(function() {
-        progress += 0.8;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(interval);
-          pencil.classList.remove('animating');
-          /* 3秒後にリセットして繰り返し */
-          setTimeout(function() {
-            colored.style.clipPath = 'inset(0 100% 0 0)';
-            setTimeout(function() { startColoringAnimation(card); }, 500);
-          }, 3000);
-        }
-        colored.style.clipPath = 'inset(0 ' + (100 - progress) + '% 0 0)';
-        pencil.style.left = 'calc(50% + ' + (progress * 0.5 - 25) + '%)';
-      }, 30);
-    }
-
-    /* 初回読み込み */
-    toLineart('/assets/hero_dog.jpg', document.getElementById('heroLineCard'));
-
-    /* 犬猫切り替え */
-    document.querySelectorAll('.pet-switch-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.pet-switch-btn').forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        var pet = btn.dataset.pet;
-        var src = '/assets/hero_' + pet + '.jpg';
-        document.getElementById('heroPhoto').src = src;
-        toLineart(src, document.getElementById('heroLineCard'));
-      });
-    });
 
     const header = document.getElementById('header');
     window.addEventListener('scroll', () => {

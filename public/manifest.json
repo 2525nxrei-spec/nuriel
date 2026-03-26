@@ -5,21 +5,15 @@
   "start_url": "/app.html",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#6B46C1",
-  "background_color": "#FAF5FF",
+  "theme_color": "#D2735C",
+  "background_color": "#FFFAF6",
   "lang": "ja",
   "categories": ["lifestyle", "entertainment"],
   "icons": [
     {
-      "src": "/assets/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/assets/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]

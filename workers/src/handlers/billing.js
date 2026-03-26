@@ -16,6 +16,18 @@ const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 const VALID_PLAN_IDS = ['otameshi', 'tappuri'];
 const VALID_BILLING_PERIODS = ['monthly', 'yearly'];
 
+// Stripe本番Price IDマッピング（D1にPrice IDが未設定の場合のフォールバック）
+const STRIPE_PRICE_IDS = {
+  otameshi: {
+    monthly: 'price_1TF9k09Fc8Hnuaoko8QNE9PR',  // ¥100/月
+    yearly: null,                                   // 年額は未設定
+  },
+  tappuri: {
+    monthly: 'price_1TF9k09Fc8HnuaokNAzdNPRv',   // ¥300/月
+    yearly: null,                                   // 年額は未設定
+  },
+};
+
 // ============================================================
 // ユーティリティ: JSON/エラーレスポンス
 // ============================================================
@@ -341,10 +353,11 @@ export async function handleCheckout(request, env, user) {
       return errorResponse('指定されたプランが見つかりません', 404);
     }
 
-    // 対応するStripe Price IDを決定
-    const priceId = billing_period === 'monthly'
-      ? plan.stripe_price_id_monthly
-      : plan.stripe_price_id_yearly;
+    // 対応するStripe Price IDを決定（D1の値を優先、未設定なら定数からフォールバック）
+    const periodKey = billing_period === 'monthly' ? 'monthly' : 'yearly';
+    const priceId = (billing_period === 'monthly' ? plan.stripe_price_id_monthly : plan.stripe_price_id_yearly)
+      || STRIPE_PRICE_IDS[plan_id]?.[periodKey]
+      || null;
 
     if (!priceId) {
       return errorResponse('このプランの価格設定が見つかりません', 500);

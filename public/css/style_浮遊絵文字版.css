@@ -149,30 +149,18 @@ img { max-width: 100%; height: auto; display: block; }
   position: relative;
   z-index: 1;
 }
-/* 額縁付き浮遊ペット写真 */
-.floating-frame {
+.floating-animal {
   position: absolute;
-  opacity: 0.35;
-  animation: floatPhoto ease-in-out infinite;
+  opacity: 0.08;
+  animation: floatAnimal linear infinite;
   user-select: none;
-  background: var(--primary-pale);
-  padding: 5px;
-  border-radius: 5px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-  isolation: isolate;
-  mix-blend-mode: multiply;
 }
-.floating-frame img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 2px;
-}
-@keyframes floatPhoto {
-  0%, 100% { translate: 0 0; }
-  25% { translate: 0 -12px; }
-  50% { translate: 0 -4px; }
-  75% { translate: 0 -18px; }
+@keyframes floatAnimal {
+  0% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-15px) rotate(5deg); }
+  50% { transform: translateY(-5px) rotate(-3deg); }
+  75% { transform: translateY(-20px) rotate(4deg); }
+  100% { transform: translateY(0) rotate(0deg); }
 }
 
 .hero h1 {
@@ -200,100 +188,34 @@ img { max-width: 100%; height: auto; display: block; }
   justify-content: center;
   gap: 1.25rem;
   margin: 2rem auto;
-  max-width: 520px;
+  max-width: 460px;
 }
 .hero-card {
   flex: 1;
-  max-width: 200px;
+  aspect-ratio: 1;
+  max-width: 170px;
   border-radius: var(--radius);
-  overflow: hidden;
-}
-.hero-card-img {
-  width: 100%;
-  height: auto;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
 }
 .hero-card-photo {
-  border: 3px solid #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
 }
 .hero-card-line {
-  border: 3px solid var(--primary-light);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: #fff;
+  border: 2px solid var(--primary-light);
 }
-.hero-card-lineart {
-  display: none;
-}
-.hero-card-line {
-  position: relative;
-  overflow: hidden;
-}
-.hero-canvas {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-.hero-canvas-line {
-  position: relative;
-  z-index: 1;
-}
-.hero-canvas-colored {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 2;
-}
-
-/* 色鉛筆アニメーション */
-.hero-pencil {
-  position: absolute;
-  font-size: 1.8rem;
-  z-index: 10;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  top: 30%;
-  left: calc(50% + -25%);
-}
-.hero-pencil.animating {
-  opacity: 1;
-  animation: pencilWiggle 0.15s ease-in-out infinite alternate;
-}
-@keyframes pencilWiggle {
-  from { transform: rotate(-8deg) translateY(-2px); }
-  to { transform: rotate(-12deg) translateY(2px); }
+.hero-card-line .card-pet {
+  filter: grayscale(1) contrast(2) brightness(1.3);
+  opacity: 0.5;
 }
 .hero-arrow {
   font-size: 1.5rem;
   color: var(--text-light);
   flex-shrink: 0;
-}
-
-/* 犬猫切り替えボタン */
-.hero-pet-switch {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-.pet-switch-btn {
-  padding: 0.4rem 1.2rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: #fff;
-  color: var(--text-light);
-  font-size: 0.9rem;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-}
-.pet-switch-btn.active {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-.pet-switch-btn:hover:not(.active) {
-  border-color: var(--primary-light);
 }
 
 .hero .btn-cta { margin-top: 0.5rem; }
@@ -305,8 +227,7 @@ img { max-width: 100%; height: auto; display: block; }
 
 @media (min-width: 768px) {
   .hero h1 { font-size: 3.2rem; }
-  .hero-card { max-width: 240px; }
-  .hero-visual { max-width: 580px; }
+  .hero-card { max-width: 200px; font-size: 5rem; }
 }
 
 /* --- 使い方（リスト形式） --- */

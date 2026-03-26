@@ -147,6 +147,7 @@ const auth = {
   /** セッションを検証（ページ読み込み時） */
   async verify() {
     if (!this.isLoggedIn()) return false;
+    if (localStorage.getItem('nuriel_token') === 'test_token_demo') return true;
     try {
       const data = await api.get('/auth/me');
       localStorage.setItem('nuriel_user', JSON.stringify(data.user));
@@ -260,10 +261,10 @@ function detectPaymentMethodsFromBrowser() {
 function showPaymentBadge(method) {
   if (method === 'applePay') {
     const badge = document.getElementById('badgeApplePay');
-    if (badge) badge.style.display = 'inline-flex';
+    if (badge) badge.classList.remove('hidden');
   } else if (method === 'googlePay') {
     const badge = document.getElementById('badgeGooglePay');
-    if (badge) badge.style.display = 'inline-flex';
+    if (badge) badge.classList.remove('hidden');
   }
 }
 
@@ -309,7 +310,7 @@ function showToast(message, type = 'success') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span><span>${message}</span>`;
+  toast.innerHTML = `<span>${message}</span>`;
   container.appendChild(toast);
   // アニメーション後に自動削除
   setTimeout(() => toast.remove(), 3200);
@@ -439,11 +440,38 @@ const uploader = {
       if (file) this._handleFile(file);
     });
 
-    // ファイル選択
+    // ファイル選択（ライブラリから）
     fileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) this._handleFile(file);
     });
+
+    // カメラ入力
+    const cameraInput = document.getElementById('cameraInput');
+    if (cameraInput) {
+      cameraInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) this._handleFile(file);
+      });
+    }
+
+    // 「写真から選ぶ」ボタン
+    const btnLibrary = document.getElementById('btnFromLibrary');
+    if (btnLibrary) {
+      btnLibrary.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.click();
+      });
+    }
+
+    // 「カメラで撮る」ボタン
+    const btnCamera = document.getElementById('btnFromCamera');
+    if (btnCamera) {
+      btnCamera.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (cameraInput) cameraInput.click();
+      });
+    }
 
     // 写真変更ボタン
     changeBtn.addEventListener('click', () => {
@@ -525,13 +553,108 @@ const converter = {
     progressFill.style.width = '0%';
 
     const messages = [
-      'AIが線画を描いています...',
+      '線画をつくっています...',
       'ペットの輪郭を抽出中...',
       '細部を仕上げています...',
       'もう少しで完成です...',
     ];
 
     try {
+      // デモモード判定
+      const isDemo = localStorage.getItem('nuriel_token') === 'test_token_demo';
+
+      if (isDemo) {
+        // Canvas線画変換（プレビュー画像から）
+        const previewSrc = document.getElementById('previewImg').src;
+        const img = new Image();
+        img.onload = function() {
+          // プログレスバーのアニメーション
+          let progress = 0;
+          const progressInterval = setInterval(() => {
+            progress += 2;
+            progressFill.style.width = progress + '%';
+            const msgIdx = Math.min(Math.floor(progress / 25), messages.length - 1);
+            convertingText.textContent = messages[msgIdx];
+            if (progress >= 100) {
+              clearInterval(progressInterval);
+
+              // Canvas線画変換
+              const canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth;
+              canvas.height = img.naturalHeight;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              const orig = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+              // ぼかし版作成
+              const c2 = document.createElement('canvas');
+              c2.width = canvas.width;
+              c2.height = canvas.height;
+              const ctx2 = c2.getContext('2d');
+              ctx2.filter = 'blur(1px)';
+              ctx2.drawImage(img, 0, 0);
+              const blurred = ctx2.getImageData(0, 0, canvas.width, canvas.height);
+
+              // 差分で輪郭抽出
+              const lineData = ctx.createImageData(canvas.width, canvas.height);
+              for (let i = 0; i < orig.data.length; i += 4) {
+                const rD = Math.abs(orig.data[i] - blurred.data[i]);
+                const gD = Math.abs(orig.data[i+1] - blurred.data[i+1]);
+                const bD = Math.abs(orig.data[i+2] - blurred.data[i+2]);
+                const edge = (rD + gD + bD) / 3;
+                const val = edge > 8 ? Math.max(0, 255 - edge * 10) : 255;
+                lineData.data[i] = val;
+                lineData.data[i+1] = val;
+                lineData.data[i+2] = val;
+                lineData.data[i+3] = 255;
+              }
+              ctx.putImageData(lineData, 0, 0);
+
+              const resultDataUrl = canvas.toDataURL('image/png');
+
+              overlay.classList.remove('show');
+
+              // 結果を表示
+              const section = document.getElementById('resultSection');
+              const resultImg = document.getElementById('resultPreview');
+              resultImg.src = resultDataUrl;
+              section.classList.add('show');
+
+              // ギャラリーにlocalStorage保存
+              const galleryItem = {
+                id: 'demo_' + Date.now(),
+                lineArtDataUrl: resultDataUrl,
+                style: state.selectedStyle,
+                createdAt: new Date().toISOString(),
+              };
+              const savedGallery = JSON.parse(localStorage.getItem('nuriel_gallery') || '[]');
+              savedGallery.unshift(galleryItem);
+              localStorage.setItem('nuriel_gallery', JSON.stringify(savedGallery));
+
+              // 残り回数を減らす
+              state.plan.remaining = Math.max(0, state.plan.remaining - 1);
+              ui.updateRemaining();
+
+              showToast('塗り絵が完成しました');
+
+              // ボタン設定
+              document.getElementById('btnDownloadPdf').onclick = () => {
+                const a = document.createElement('a');
+                a.href = resultDataUrl;
+                a.download = 'nuriel-' + galleryItem.id + '.png';
+                a.click();
+                showToast('ダウンロードしました');
+              };
+              document.getElementById('btnSaveGallery').onclick = () => {
+                showToast('ギャラリーに保存済みです');
+              };
+            }
+          }, 50);
+        };
+        img.src = previewSrc;
+        return; // API呼び出しをスキップ
+      }
+
       // ① 画像アップロード
       const formData = new FormData();
       formData.append('image', state.selectedFile);
@@ -645,8 +768,8 @@ const gallery = {
       const { items } = await api.get('/gallery');
       state.gallery = items || [];
     } catch {
-      // オフライン時はローカルキャッシュを使用
-      state.gallery = [];
+      // オフライン/デモ時はlocalStorageから読み込み
+      state.gallery = JSON.parse(localStorage.getItem('nuriel_gallery') || '[]');
     }
 
     if (state.gallery.length === 0) {
@@ -658,19 +781,23 @@ const gallery = {
     grid.style.display = 'grid';
     empty.style.display = 'none';
 
-    grid.innerHTML = state.gallery.map((item) => `
+    grid.innerHTML = state.gallery.map((item) => {
+      const imgSrc = item.lineArtDataUrl || '';
+      const dataSrc = item.lineArtUrl || '';
+      return `
       <div class="gallery-item" data-id="${item.id}">
-        <img data-src="${item.lineArtUrl || ''}" alt="塗り絵" loading="lazy"
+        <img ${imgSrc ? `src="${imgSrc}"` : `data-src="${dataSrc}"`} alt="塗り絵" loading="lazy"
              style="min-height:100px;background:#f0f0f0;">
         <div class="gallery-item-date">${new Date(item.createdAt).toLocaleDateString('ja-JP')}</div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
-    // 認証トークン付きで画像を読み込み
+    // 認証トークン付きで画像を読み込み（data:URL既設定の場合はスキップ）
     const token = localStorage.getItem('nuriel_token');
     grid.querySelectorAll('.gallery-item img[data-src]').forEach(async (img) => {
       const src = img.dataset.src;
-      if (!src) return;
+      if (!src || img.src.startsWith('data:')) return;
       try {
         const res = await fetch(`${CONFIG.API_BASE}${src}`, {
           headers: { 'Authorization': `Bearer ${token}` },
@@ -699,8 +826,11 @@ const gallery = {
     const modalImg = document.getElementById('galleryModalImg');
     modal.classList.add('show');
 
-    // 認証トークン付きで画像を取得
-    if (item.lineArtUrl) {
+    // lineArtDataUrl（デモモード）がある場合は直接表示
+    if (item.lineArtDataUrl) {
+      modalImg.src = item.lineArtDataUrl;
+    } else if (item.lineArtUrl) {
+      // 認証トークン付きで画像を取得
       const token = localStorage.getItem('nuriel_token');
       fetch(`${CONFIG.API_BASE}${item.lineArtUrl}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -712,9 +842,16 @@ const gallery = {
       modalImg.src = '';
     }
 
-    // PDF再ダウンロード（認証トークン付き）
+    // ダウンロード（デモモードはdataURLから直接、通常はAPI経由）
     document.getElementById('modalBtnDownload').onclick = () => {
-      if (item.pdfUrl) {
+      if (item.lineArtDataUrl) {
+        // デモモード: dataURLから直接ダウンロード
+        const a = document.createElement('a');
+        a.href = item.lineArtDataUrl;
+        a.download = `nuriel-${item.id}.png`;
+        a.click();
+        showToast('ダウンロードしました');
+      } else if (item.pdfUrl) {
         const token = localStorage.getItem('nuriel_token');
         fetch(`${CONFIG.API_BASE}${item.pdfUrl}`, {
           headers: { 'Authorization': `Bearer ${token}` },
@@ -741,7 +878,15 @@ const gallery = {
     document.getElementById('modalBtnDelete').onclick = async () => {
       if (!confirm('この塗り絵を削除しますか？')) return;
       try {
-        await api.delete(`/gallery/${item.id}`);
+        const isDemo = localStorage.getItem('nuriel_token') === 'test_token_demo';
+        if (isDemo) {
+          // デモモード: localStorageから削除
+          const saved = JSON.parse(localStorage.getItem('nuriel_gallery') || '[]');
+          const updated = saved.filter(g => g.id !== item.id);
+          localStorage.setItem('nuriel_gallery', JSON.stringify(updated));
+        } else {
+          await api.delete(`/gallery/${item.id}`);
+        }
         modal.classList.remove('show');
         showToast('削除しました');
         this.load();
@@ -769,7 +914,7 @@ const planUI = {
     const nameEl = document.getElementById('currentPlanName');
     const detailEl = document.getElementById('currentPlanDetail');
 
-    nameEl.textContent = state.plan.name === 'たっぷり' ? '🎨 たっぷり' : '🐾 おためし';
+    nameEl.textContent = state.plan.name === 'たっぷり' ? 'たっぷり' : 'おためし';
     detailEl.textContent = `今月の残り: ${state.plan.remaining} / ${state.plan.total} 枚`;
 
     // ボタンの状態更新
@@ -783,9 +928,7 @@ const planUI = {
       btnTappuri.className = 'btn-plan btn-plan-upgrade';
     } else {
       btnOtameshi.textContent = 'ダウングレード';
-      btnOtameshi.className = 'btn-plan btn-plan-upgrade';
-      btnOtameshi.style.background = 'var(--purple-100)';
-      btnOtameshi.style.color = 'var(--purple-600)';
+      btnOtameshi.className = 'btn-plan btn-plan-upgrade btn-plan-downgrade';
       btnTappuri.textContent = '利用中';
       btnTappuri.className = 'btn-plan btn-plan-current';
     }
@@ -856,6 +999,24 @@ function bindEvents() {
     }
   });
 
+  // --- テストログインボタン ---
+  const btnTestLogin = document.getElementById('btnTestLogin');
+  if (btnTestLogin) {
+    btnTestLogin.addEventListener('click', () => {
+      localStorage.setItem('nuriel_token', 'test_token_demo');
+      localStorage.setItem('nuriel_user', JSON.stringify({
+        id: 'test_user',
+        email: 'test@nuriel.app',
+        display_name: 'テストユーザー',
+        plan: 'otameshi',
+      }));
+      state.user = auth.getUser();
+      ui.hideAuth();
+      showToast('テストログインしました');
+      initAppData();
+    });
+  }
+
   // --- ナビゲーション ---
   document.querySelectorAll('.nav-item').forEach((el) => {
     el.addEventListener('click', () => {
@@ -913,6 +1074,18 @@ async function handlePlanChange(planName) {
     btn.disabled = true;
   }
 
+  const isDemo = localStorage.getItem('nuriel_token') === 'test_token_demo';
+  if (isDemo) {
+    state.plan.name = planName;
+    state.plan.remaining = planName === 'たっぷり' ? 20 : 3;
+    state.plan.total = planName === 'たっぷり' ? 20 : 3;
+    planUI.render();
+    updateStyleLocks();
+    showToast(planName + 'プランに変更しました');
+    if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+    return;
+  }
+
   try {
     const planIdMap = { 'おためし': 'otameshi', 'たっぷり': 'tappuri' };
     const planId = planIdMap[planName];
@@ -953,6 +1126,13 @@ async function handlePlanChange(planName) {
 
 /** 退会処理（現時点では未実装のため、ログアウトのみ） */
 async function handleWithdraw() {
+  const isDemo = localStorage.getItem('nuriel_token') === 'test_token_demo';
+  if (isDemo) {
+    localStorage.removeItem('nuriel_gallery');
+    auth.logout();
+    showToast('退会しました。ご利用ありがとうございました。');
+    return;
+  }
   try {
     // TODO: 退会APIの実装後に /api/auth/withdraw を呼び出す
     await api.post('/auth/logout');
@@ -973,17 +1153,22 @@ async function initAppData() {
     history.replaceState(null, '', '/app.html#plan');
   }
 
-  try {
-    const data = await api.get('/billing/status');
-    if (data.plan && data.usage) {
-      state.plan = {
-        name: data.plan.name,
-        remaining: data.usage.remaining,
-        total: data.usage.monthly_limit,
-      };
+  const isDemo = localStorage.getItem('nuriel_token') === 'test_token_demo';
+  if (isDemo) {
+    state.plan = state.plan || { name: 'おためし', remaining: 3, total: 3 };
+  } else {
+    try {
+      const data = await api.get('/billing/status');
+      if (data.plan && data.usage) {
+        state.plan = {
+          name: data.plan.name,
+          remaining: data.usage.remaining,
+          total: data.usage.monthly_limit,
+        };
+      }
+    } catch {
+      state.plan = { name: 'おためし', remaining: 3, total: 3 };
     }
-  } catch {
-    // デモ用デフォルト値を使用
   }
   ui.updateRemaining();
 
