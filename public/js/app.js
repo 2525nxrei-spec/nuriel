@@ -330,6 +330,92 @@ function mountPaymentRequestButton() {
 }
 
 /* ==============================================
+   ボタンフィードバック（100msスピナー→チェックマーク→元に戻る）
+   ============================================== */
+/**
+ * ボタンにローディング→成功→元に戻るフィードバックを付与
+ * @param {HTMLButtonElement} btn - 対象ボタン
+ * @param {Function} asyncFn - 実行する非同期処理
+ * @returns {Promise<*>} asyncFnの戻り値
+ */
+async function withButtonFeedback(btn, asyncFn) {
+  if (!btn || btn.disabled) return;
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.classList.add('btn-feedback', 'feedback-loading');
+
+  try {
+    const result = await asyncFn();
+    /* 成功: チェックマーク表示 */
+    btn.classList.remove('feedback-loading');
+    btn.innerHTML = '<span style="color:transparent">' + originalText + '</span>';
+    btn.classList.add('feedback-success');
+    await new Promise(r => setTimeout(r, 800));
+    return result;
+  } catch (err) {
+    throw err;
+  } finally {
+    /* 元に戻す */
+    btn.classList.remove('btn-feedback', 'feedback-loading', 'feedback-success');
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+/* ==============================================
+   オフライン検知・通知バー
+   ============================================== */
+function initOfflineDetection() {
+  const bar = document.getElementById('offlineBar');
+  if (!bar) return;
+
+  function updateStatus() {
+    if (!navigator.onLine) {
+      bar.classList.add('show');
+    } else {
+      bar.classList.remove('show');
+    }
+  }
+  window.addEventListener('online', updateStatus);
+  window.addEventListener('offline', updateStatus);
+  updateStatus();
+}
+
+/* ==============================================
+   キーボード操作（Escでモーダル閉じ）
+   ============================================== */
+function initKeyboardHandlers() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      /* ギャラリーモーダル */
+      const galleryModal = document.getElementById('galleryModal');
+      if (galleryModal && galleryModal.classList.contains('show')) {
+        galleryModal.classList.remove('show');
+        return;
+      }
+      /* Embedded Checkoutモーダル */
+      const checkoutModal = document.getElementById('nuriel-checkout-modal');
+      if (checkoutModal) {
+        closeNurielCheckoutModal();
+        return;
+      }
+      /* 変換中オーバーレイは閉じない（処理中のため） */
+    }
+  });
+}
+
+/* ==============================================
+   ページローダー制御
+   ============================================== */
+function hidePageLoader() {
+  const loader = document.getElementById('pageLoader');
+  if (loader) {
+    loader.classList.add('fade-out');
+    setTimeout(() => loader.remove(), 300);
+  }
+}
+
+/* ==============================================
    トースト通知
    ============================================== */
 function showToast(message, type = 'success') {
@@ -372,19 +458,20 @@ const ui = {
     if (mode === 'login') {
       title.textContent = 'ログイン';
       submitBtn.textContent = 'ログイン';
-      switchText.innerHTML = 'アカウントをお持ちでない方は <a id="authToggle">新規登録はこちら</a>';
+      switchText.innerHTML = 'アカウントをお持ちでない方は <a href="#register" id="authToggle" role="button">新規登録はこちら</a>';
       if (termsGroup) termsGroup.style.display = 'none';
       if (pwStrength) pwStrength.style.display = 'none';
     } else {
       title.textContent = '新規登録';
       submitBtn.textContent = '無料で始める';
-      switchText.innerHTML = 'アカウントをお持ちの方は <a id="authToggle">ログインはこちら</a>';
+      switchText.innerHTML = 'アカウントをお持ちの方は <a href="#login" id="authToggle" role="button">ログインはこちら</a>';
       if (termsGroup) termsGroup.style.display = 'block';
       if (pwStrength) pwStrength.style.display = 'block';
     }
 
     // 切替リンクにイベント
-    document.getElementById('authToggle').addEventListener('click', () => {
+    document.getElementById('authToggle').addEventListener('click', (e) => {
+      e.preventDefault();
       this._setAuthMode(mode === 'login' ? 'register' : 'login');
     });
 
@@ -512,7 +599,8 @@ const uploader = {
     }
 
     // 写真変更ボタン
-    changeBtn.addEventListener('click', () => {
+    changeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
       fileInput.value = '';
       state.selectedFile = null;
       preview.classList.remove('show');
@@ -776,31 +864,31 @@ const converter = {
     }
     section.classList.add('show');
 
-    // PDFダウンロードボタン
-    document.getElementById('btnDownloadPdf').onclick = () => {
-      // 認証トークンをヘッダーで渡すため、fetchでダウンロード
-      const token = localStorage.getItem('nuriel_token');
-      fetch(`${CONFIG.API_BASE}/pdf/${genId}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
-        .then(res => {
-          if (!res.ok) throw new Error(CONFIG.ERRORS.PDF_FAIL);
-          return res.blob();
-        })
-        .then(blob => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `nuriel-${genId}.pdf`;
-          a.click();
-          URL.revokeObjectURL(url);
-        })
-        .catch(err => showToast(err.message || CONFIG.ERRORS.PDF_FAIL, 'error'));
+    // PDFダウンロードボタン（二重送信防止付き）
+    const btnPdf = document.getElementById('btnDownloadPdf');
+    btnPdf.onclick = () => {
+      withButtonFeedback(btnPdf, async () => {
+        const token = localStorage.getItem('nuriel_token');
+        const res = await fetch(`${CONFIG.API_BASE}/pdf/${genId}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(CONFIG.ERRORS.PDF_FAIL);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nuriel-${genId}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }).catch(err => showToast(err.message || CONFIG.ERRORS.PDF_FAIL, 'error'));
     };
 
-    // ギャラリーに保存（変換完了時点で自動的にgenerationsに保存されるため、メッセージのみ）
-    document.getElementById('btnSaveGallery').onclick = () => {
-      showToast('ギャラリーに保存済みです');
+    // ギャラリーに保存（二重送信防止付き）
+    const btnSave = document.getElementById('btnSaveGallery');
+    btnSave.onclick = () => {
+      withButtonFeedback(btnSave, async () => {
+        await new Promise(r => setTimeout(r, 100));
+      }).then(() => showToast('ギャラリーに保存済みです'));
     };
   },
 };
@@ -898,41 +986,38 @@ const gallery = {
       modalImg.src = '';
     }
 
-    document.getElementById('modalBtnDownload').onclick = () => {
-      if (item.pdfUrl) {
-        const token = localStorage.getItem('nuriel_token');
-        fetch(`${CONFIG.API_BASE}${item.pdfUrl}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        })
-          .then(res => {
-            if (!res.ok) throw new Error(CONFIG.ERRORS.PDF_FAIL);
-            return res.blob();
-          })
-          .then(blob => {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `nuriel-${item.id}.pdf`;
-            a.click();
-            URL.revokeObjectURL(url);
-          })
-          .catch(err => showToast(err.message || CONFIG.ERRORS.PDF_FAIL, 'error'));
-      } else {
+    const modalBtnDl = document.getElementById('modalBtnDownload');
+    modalBtnDl.onclick = () => {
+      if (!item.pdfUrl) {
         showToast('PDFがまだ生成されていません', 'error');
+        return;
       }
+      withButtonFeedback(modalBtnDl, async () => {
+        const token = localStorage.getItem('nuriel_token');
+        const res = await fetch(`${CONFIG.API_BASE}${item.pdfUrl}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(CONFIG.ERRORS.PDF_FAIL);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nuriel-${item.id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }).catch(err => showToast(err.message || CONFIG.ERRORS.PDF_FAIL, 'error'));
     };
 
-    // 削除
-    document.getElementById('modalBtnDelete').onclick = async () => {
+    // 削除（二重送信防止付き）
+    const modalBtnDel = document.getElementById('modalBtnDelete');
+    modalBtnDel.onclick = async () => {
       if (!confirm('この塗り絵を削除しますか？')) return;
-      try {
+      withButtonFeedback(modalBtnDel, async () => {
         await api.delete(`/gallery/${item.id}`);
         modal.classList.remove('show');
         showToast('削除しました');
         this.load();
-      } catch (err) {
-        showToast(err.message, 'error');
-      }
+      }).catch(err => showToast(err.message, 'error'));
     };
 
     // モーダル閉じる
@@ -1101,8 +1186,9 @@ function bindEvents() {
   // --- 月額/年額切り替えトグル（アプリ内） ---
   document.querySelectorAll('#appBillingToggle .billing-toggle-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#appBillingToggle .billing-toggle-btn').forEach((b) => b.classList.remove('active'));
+      document.querySelectorAll('#appBillingToggle .billing-toggle-btn').forEach((b) => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
       btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
       const period = btn.dataset.period;
       const nameOtameshi = document.getElementById('appPlanNameOtameshi');
       const descOtameshi = document.getElementById('appPlanDescOtameshi');
@@ -1146,6 +1232,19 @@ function bindEvents() {
     else { el.textContent = 'パスワード強度: OK'; el.style.color = '#16a34a'; }
   });
 
+  // パスワード変更: Enterキーで送信
+  ['settingsCurrentPw', 'settingsNewPw', 'settingsConfirmPw'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('btnSubmitPassword').click();
+        }
+      });
+    }
+  });
+
   // パスワード変更送信
   document.getElementById('btnSubmitPassword').addEventListener('click', async () => {
     const btn = document.getElementById('btnSubmitPassword');
@@ -1157,16 +1256,14 @@ function bindEvents() {
     if (!/[a-zA-Z]/.test(newPw) || !/[0-9]/.test(newPw)) { showToast('パスワードは英字と数字の両方を含めてください', 'error'); return; }
     if (newPw !== confirmPw) { showToast('新しいパスワードが一致しません', 'error'); return; }
 
-    btn.disabled = true; btn.textContent = '変更中...';
-    try {
+    withButtonFeedback(btn, async () => {
       await api.request('/auth/password', { method: 'PUT', body: JSON.stringify({ current_password: currentPw, new_password: newPw }) });
       showToast('パスワードを変更しました');
       document.getElementById('settingsCurrentPw').value = '';
       document.getElementById('settingsNewPw').value = '';
       document.getElementById('settingsConfirmPw').value = '';
       document.getElementById('password-change-form').style.display = 'none';
-    } catch (err) { showToast(err.message || 'パスワード変更に失敗しました', 'error'); }
-    finally { btn.disabled = false; btn.textContent = 'パスワードを変更'; }
+    }).catch(err => showToast(err.message || 'パスワード変更に失敗しました。現在のパスワードが正しいか確認してください。', 'error'));
   });
 
   // --- 設定: ログアウト ---
@@ -1371,6 +1468,12 @@ async function init() {
   // Service Worker
   registerSW();
 
+  // オフライン検知・通知バー
+  initOfflineDetection();
+
+  // キーボード操作ハンドラ（Escでモーダル閉じ等）
+  initKeyboardHandlers();
+
   // イベントバインド
   bindEvents();
   uploader.init();
@@ -1386,6 +1489,7 @@ async function init() {
     if (valid) {
       state.user = auth.getUser();
       ui.hideAuth();
+      hidePageLoader();
       initAppData();
       return;
     }
@@ -1393,6 +1497,9 @@ async function init() {
 
   // 未ログイン → 認証画面表示
   ui.showAuth('login');
+
+  // ページローダーを非表示
+  hidePageLoader();
 }
 
 // セッションタイムアウト（24時間操作なしでログアウト）

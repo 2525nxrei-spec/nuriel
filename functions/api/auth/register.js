@@ -92,6 +92,6 @@ export async function onRequestPost(context) {
     }, 201);
   } catch (err) {
     console.error('ユーザー登録エラー:', err.message, err.stack);
-    return errorResponse(`登録処理でエラーが発生しました: ${err.message}`, 500);
+    return errorResponse('登録処理中にエラーが発生しました', 500);
   }
 }

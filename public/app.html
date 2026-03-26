@@ -10,7 +10,7 @@
     if ('serviceWorker' in navigator) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'nuriel-v3') caches.delete(key);
+          if (key !== 'nuriel-v5') caches.delete(key);
         });
       });
       navigator.serviceWorker.getRegistrations().then(function(regs) {
@@ -32,6 +32,17 @@
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
+
+  <!-- ========== ページ読み込みスピナー ========== -->
+  <div class="page-loader" id="pageLoader" aria-label="ページ読み込み中">
+    <div class="page-loader-spinner"></div>
+    <div class="page-loader-text">読み込み中...</div>
+  </div>
+
+  <!-- ========== オフライン通知バー ========== -->
+  <div class="offline-bar" id="offlineBar" role="alert" aria-live="assertive">
+    インターネットに接続されていません。一部の機能が利用できない場合があります。
+  </div>
 
   <!-- ========== 認証オーバーレイ ========== -->
   <div class="auth-overlay hidden" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
@@ -60,7 +71,7 @@
         <p style="text-align:center;margin-top:10px;font-size:0.8rem;color:#9ca3af;">パスワードをお忘れの方は <a href="contact.html" style="color:#D2735C;text-decoration:underline;">こちら</a></p>
       </form>
       <div class="auth-switch" id="authSwitch">
-        アカウントをお持ちでない方は <a id="authToggle">新規登録はこちら</a>
+        アカウントをお持ちでない方は <a href="#register" id="authToggle" role="button">新規登録はこちら</a>
       </div>
     </div>
   </div>
@@ -80,9 +91,9 @@
     <div class="gallery-modal-card">
       <img class="gallery-modal-img" id="galleryModalImg" src="" alt="塗り絵詳細">
       <div class="gallery-modal-actions">
-        <button class="btn-secondary" id="modalBtnDownload">PDFダウンロード</button>
-        <button class="btn-danger" id="modalBtnDelete">削除</button>
-        <button class="btn-secondary" id="modalBtnClose">閉じる</button>
+        <button class="btn-secondary" id="modalBtnDownload" aria-label="PDFをダウンロード">PDFダウンロード</button>
+        <button class="btn-danger" id="modalBtnDelete" aria-label="この塗り絵を削除">削除</button>
+        <button class="btn-secondary" id="modalBtnClose" aria-label="モーダルを閉じる">閉じる</button>
       </div>
     </div>
   </div>
@@ -129,7 +140,7 @@
         <div class="preview-container" id="previewContainer" role="region" aria-label="画像プレビュー">
           <img class="preview-img" id="previewImg" src="" alt="アップロードした画像のプレビュー">
           <p class="preview-name" id="previewName"></p>
-          <a class="preview-change" id="previewChange">別の写真を選ぶ</a>
+          <a href="#change-photo" class="preview-change" id="previewChange" role="button">別の写真を選ぶ</a>
         </div>
 
         <!-- スタイル選択 -->
@@ -159,9 +170,9 @@
           <h3 class="screen-title mt-3">完成しました</h3>
           <img class="result-preview" id="resultPreview" src="" alt="変換された線画の塗り絵">
           <div class="result-actions">
-            <button class="btn-primary" id="btnDownloadPdf">PDFをダウンロード</button>
-            <button class="btn-secondary" id="btnSaveGallery">保存する</button>
-            <button class="btn-secondary" id="btnNewConvert">もう1枚つくる</button>
+            <button class="btn-primary" id="btnDownloadPdf" aria-label="PDFをダウンロード">PDFをダウンロード</button>
+            <button class="btn-secondary" id="btnSaveGallery" aria-label="ギャラリーに保存する">保存する</button>
+            <button class="btn-secondary" id="btnNewConvert" aria-label="もう1枚つくる">もう1枚つくる</button>
           </div>
         </div>
       </div>
@@ -188,9 +199,9 @@
         </div>
 
         <!-- 月額/年額切り替えトグル -->
-        <div class="billing-toggle" id="appBillingToggle">
-          <button class="billing-toggle-btn active" data-period="monthly">月額</button>
-          <button class="billing-toggle-btn" data-period="yearly">年額<span class="billing-badge">2ヶ月分おトク</span></button>
+        <div class="billing-toggle" id="appBillingToggle" role="group" aria-label="請求期間の切り替え">
+          <button class="billing-toggle-btn active" data-period="monthly" aria-label="月額プランを表示" aria-pressed="true">月額</button>
+          <button class="billing-toggle-btn" data-period="yearly" aria-label="年額プランを表示" aria-pressed="false">年額<span class="billing-badge">2ヶ月分おトク</span></button>
         </div>
 
         <!-- プラン選択 -->
@@ -308,8 +319,8 @@
           <div id="settingsSubInfo"></div>
         </div>
 
-        <button class="btn-logout" id="btnLogout">ログアウト</button>
-        <button class="btn-withdraw" id="btnWithdraw">退会する</button>
+        <button class="btn-logout" id="btnLogout" aria-label="ログアウトする">ログアウト</button>
+        <button class="btn-withdraw" id="btnWithdraw" aria-label="退会する">退会する</button>
       </div>
 
     </main>

@@ -1010,6 +1010,100 @@ img { max-width: 100%; height: auto; display: block; }
   margin-right: 0.5rem;
 }
 
+/* --- ボタンフィードバック（スピナー→チェックマーク→元に戻る） --- */
+.btn-feedback {
+  position: relative;
+  overflow: hidden;
+}
+.btn-feedback.feedback-loading {
+  color: transparent !important;
+  pointer-events: none;
+}
+.btn-feedback.feedback-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+.btn-feedback.feedback-success {
+  pointer-events: none;
+}
+.btn-feedback.feedback-success::after {
+  content: '\2713';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #fff;
+}
+/* 暗い背景のないボタン用チェックマーク */
+.btn-secondary.feedback-success::after,
+.btn-danger.feedback-success::after,
+.btn-settings.feedback-success::after {
+  color: var(--success);
+}
+
+/* --- オフライン通知バー --- */
+.offline-bar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 400;
+  background: #dc2626;
+  color: #fff;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: slideDown 0.3s ease;
+}
+.offline-bar.show { display: block; }
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* --- ページ読み込みスピナー --- */
+.page-loader {
+  position: fixed;
+  inset: 0;
+  background: var(--cream);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  transition: opacity 0.3s ease;
+}
+.page-loader.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+.page-loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--primary-pale);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.page-loader-text {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
 /* --- 汎用ユーティリティ --- */
 .hidden { display: none !important; }
 .text-center { text-align: center; }

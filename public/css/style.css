@@ -693,6 +693,19 @@ img { max-width: 100%; height: auto; display: block; }
   }
 }
 
+/* --- フォーカス可視化（アクセシビリティ） --- */
+.btn-cta:focus-visible,
+.btn-sub:focus-visible,
+.header-cta:focus-visible,
+.pet-switch-btn:focus-visible,
+.faq-question:focus-visible,
+.billing-toggle-btn:focus-visible,
+.lp-nav a:focus-visible,
+.footer-links a:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
 /* --- iOS Safari / PWA 対応 --- */
 @supports (padding: env(safe-area-inset-bottom)) {
   .lp-footer {

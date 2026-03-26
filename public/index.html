@@ -11,7 +11,7 @@
     if ('serviceWorker' in navigator) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'nuriel-v3') caches.delete(key);
+          if (key !== 'nuriel-v5') caches.delete(key);
         });
       });
       navigator.serviceWorker.getRegistrations().then(function(regs) {
@@ -131,9 +131,9 @@
       <h2 class="section-title">料金</h2>
 
       <!-- 月額/年額切り替えトグル -->
-      <div class="billing-toggle" id="lpBillingToggle">
-        <button class="billing-toggle-btn active" data-period="monthly">月額</button>
-        <button class="billing-toggle-btn" data-period="yearly">年額<span class="billing-badge">2ヶ月分おトク</span></button>
+      <div class="billing-toggle" id="lpBillingToggle" role="group" aria-label="請求期間の切り替え">
+        <button class="billing-toggle-btn active" data-period="monthly" aria-label="月額プランを表示" aria-pressed="true">月額</button>
+        <button class="billing-toggle-btn" data-period="yearly" aria-label="年額プランを表示" aria-pressed="false">年額<span class="billing-badge">2ヶ月分おトク</span></button>
       </div>
 
       <div class="pricing-grid">
@@ -173,7 +173,7 @@
 
       <div class="faq-list">
         <div class="faq-item">
-          <button class="faq-question">
+          <button class="faq-question" aria-label="よくある質問を開く">
             どんなペットでも大丈夫ですか？
             <span class="faq-chevron">▼</span>
           </button>
@@ -185,7 +185,7 @@
         </div>
 
         <div class="faq-item">
-          <button class="faq-question">
+          <button class="faq-question" aria-label="よくある質問を開く">
             お金をかけずに試せますか？
             <span class="faq-chevron">▼</span>
           </button>
@@ -197,7 +197,7 @@
         </div>
 
         <div class="faq-item">
-          <button class="faq-question">
+          <button class="faq-question" aria-label="よくある質問を開く">
             印刷ってどうやるの？
             <span class="faq-chevron">▼</span>
           </button>
@@ -209,7 +209,7 @@
         </div>
 
         <div class="faq-item">
-          <button class="faq-question">
+          <button class="faq-question" aria-label="よくある質問を開く">
             やめたくなったらすぐやめられますか？
             <span class="faq-chevron">▼</span>
           </button>
@@ -221,7 +221,7 @@
         </div>
 
         <div class="faq-item">
-          <button class="faq-question">
+          <button class="faq-question" aria-label="よくある質問を開く">
             写真のデータはどうなりますか？
             <span class="faq-chevron">▼</span>
           </button>
@@ -428,8 +428,9 @@
 
       toggleBtns.forEach(function(btn) {
         btn.addEventListener('click', function() {
-          toggleBtns.forEach(function(b) { b.classList.remove('active'); });
+          toggleBtns.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
           btn.classList.add('active');
+          btn.setAttribute('aria-pressed', 'true');
           var period = btn.dataset.period;
 
           if (period === 'yearly') {

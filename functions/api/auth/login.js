@@ -68,6 +68,6 @@ export async function onRequestPost(context) {
     });
   } catch (err) {
     console.error('ログインエラー:', err.message, err.stack);
-    return errorResponse(`ログイン処理でエラーが発生しました: ${err.message}`, 500);
+    return errorResponse('ログイン処理中にエラーが発生しました', 500);
   }
 }
