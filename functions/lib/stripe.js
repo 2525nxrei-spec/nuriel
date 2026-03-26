@@ -14,17 +14,14 @@ export const VALID_PLAN_IDS = ['otameshi', 'tappuri'];
 export const VALID_BILLING_PERIODS = ['monthly', 'yearly'];
 
 // Stripe本番Price IDマッピング（D1にPrice IDが未設定の場合のフォールバック）
-// 要設定: 年額Price ID — Stripeダッシュボードで年額商品を作成後、各 yearly に Price ID を設定する
-// おためし年額: ¥1,000/年 → Stripe Price作成後に 'price_xxxx' を設定
-// たっぷり年額: ¥3,000/年 → Stripe Price作成後に 'price_xxxx' を設定
 export const STRIPE_PRICE_IDS = {
   otameshi: {
     monthly: 'price_1TF9k09Fc8Hnuaoko8QNE9PR',  // ¥100/月
-    yearly: null,                                   // 要設定: Stripeで年額商品作成後にPrice IDを設定
+    yearly: 'price_1TFFQ99Fc8HnuaokGaHGFIWS',   // ¥1,000/年
   },
   tappuri: {
     monthly: 'price_1TF9k09Fc8HnuaokNAzdNPRv',   // ¥300/月
-    yearly: null,                                   // 要設定: Stripeで年額商品作成後にPrice IDを設定
+    yearly: 'price_1TFFRU9Fc8HnuaokqFdzJaJk',    // ¥3,000/年
   },
 };
 
