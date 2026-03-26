@@ -5,7 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ヌリエル — うちの子を、ぬりえに。</title>
   <meta name="description" content="ペット写真をぬりえの線画に変換。印刷してすぐ塗れる。月額100円から。">
-  <meta name="theme-color" content="#6B46C1">
+  <meta name="theme-color" content="#D2735C">
+  <script>
+    /* 古いService Workerのキャッシュを強制クリア */
+    if ('serviceWorker' in navigator) {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(key) {
+          if (key !== 'nuriel-v3') caches.delete(key);
+        });
+      });
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(reg) { reg.unregister(); });
+      }).then(function() {
+        navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+      });
+    }
+  </script>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -402,12 +417,6 @@
       });
     });
 
-    /* Service Worker更新 */
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
-        .then(function(reg) { reg.update(); })
-        .catch(function() {});
-    }
   </script>
 
 </body>

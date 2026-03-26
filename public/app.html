@@ -6,6 +6,20 @@
   <title>ヌリエル</title>
   <meta name="description" content="うちの子を、ぬりえに。ペット写真をぬりえの線画に変換。">
   <meta name="theme-color" content="#D2735C">
+  <script>
+    if ('serviceWorker' in navigator) {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(key) {
+          if (key !== 'nuriel-v3') caches.delete(key);
+        });
+      });
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(reg) { reg.unregister(); });
+      }).then(function() {
+        navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+      });
+    }
+  </script>
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
