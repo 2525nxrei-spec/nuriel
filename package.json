@@ -1,0 +1,13 @@
+{
+  "name": "nuriel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ヌリエル — ペット写真→塗り絵線画AI変換サービス",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  }
+}
