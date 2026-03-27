@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ご要望・ご報告 — ヌリエル</title>
+  <meta name="description" content="ヌリエルへの機能リクエスト・バグ報告・ご要望をお寄せください。">
+  <meta name="theme-color" content="#D2735C">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="canonical" href="https://photo-nurie.com/request.html">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .legal-page {
+      padding: 96px 0 4rem;
+      min-height: calc(100vh - 200px);
+      background: #fff;
+    }
+    .legal-page .container {
+      max-width: 720px;
+    }
+    .legal-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--primary);
+    }
+    .request-intro {
+      font-size: 0.95rem;
+      color: var(--text-light);
+      line-height: 1.9;
+      margin-bottom: 2rem;
+    }
+    .request-form {
+      background: var(--primary-pale);
+      border-radius: var(--radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group:last-of-type {
+      margin-bottom: 0;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .form-label .optional {
+      font-weight: 400;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-left: 0.5rem;
+    }
+    .form-label .required {
+      font-weight: 400;
+      font-size: 0.8rem;
+      color: var(--primary);
+      margin-left: 0.5rem;
+    }
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--text);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: border-color 0.2s;
+    }
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(210, 115, 92, 0.15);
+    }
+    .form-textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%237A6E6A' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+    .form-submit {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 0.85rem 2.5rem;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .form-submit:hover {
+      background: var(--primary-dark);
+    }
+    .form-submit:active {
+      transform: scale(0.97);
+    }
+    .form-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .form-message {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      display: none;
+    }
+    .form-message.success {
+      display: block;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+    }
+    .form-message.error {
+      display: block;
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .legal-back {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      color: var(--primary-dark);
+    }
+    .legal-back:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 640px) {
+      .legal-page { padding-top: 72px; }
+      .legal-title { font-size: 1.3rem; }
+      .request-form { padding: 1.5rem; }
+    }
+    @media (pointer: coarse) {
+      .form-submit {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <header class="lp-header" id="header">
+    <div class="container">
+      <a href="/" class="lp-logo" style="text-decoration:none;">ヌリエル</a>
+      <nav class="lp-nav" aria-label="サイトナビゲーション">
+        <a href="/#howto">使い方</a>
+        <a href="/#pricing">料金</a>
+        <a href="/#faq">FAQ</a>
+        <a href="/app.html" class="header-cta">ログイン</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 本文 -->
+  <main class="legal-page">
+    <div class="container">
+      <h1 class="legal-title">ご要望・ご報告</h1>
+
+      <p class="request-intro">
+        ヌリエルをご利用いただきありがとうございます。<br>
+        「こんな機能がほしい」「ここが使いにくい」など、お気軽にお寄せください。<br>
+        いただいた声をもとに、サービスをよりよくしていきます。
+      </p>
+
+      <form class="request-form" id="requestForm">
+        <div class="form-group">
+          <label class="form-label" for="reqName">お名前<span class="optional">任意</span></label>
+          <input type="text" id="reqName" name="name" class="form-input" placeholder="例: 田中太郎" autocomplete="name" maxlength="100">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reqEmail">メールアドレス<span class="optional">任意</span></label>
+          <input type="email" id="reqEmail" name="email" class="form-input" placeholder="例: taro@example.com" autocomplete="email" maxlength="254">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reqCategory">カテゴリ<span class="required">必須</span></label>
+          <select id="reqCategory" name="category" class="form-select" required>
+            <option value="" disabled selected>選択してください</option>
+            <option value="機能リクエスト">機能リクエスト</option>
+            <option value="バグ報告">バグ報告</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reqContent">内容<span class="required">必須</span></label>
+          <textarea id="reqContent" name="content" class="form-textarea" placeholder="できるだけ詳しく教えていただけると助かります" required maxlength="5000"></textarea>
+        </div>
+
+        <button type="submit" class="form-submit" id="submitBtn">送信する</button>
+        <div class="form-message" id="formMessage"></div>
+      </form>
+
+      <a href="/" class="legal-back">&larr; トップページに戻る</a>
+    </div>
+  </main>
+
+  <!-- フッター -->
+  <footer class="lp-footer">
+    <div class="container">
+      <div class="footer-logo">ヌリエル</div>
+      <div class="footer-links">
+        <a href="/terms.html">利用規約</a>
+        <a href="/privacy.html">プライバシーポリシー</a>
+        <a href="/tokushoho.html">特定商取引法に基づく表記</a>
+        <a href="/contact.html">お問い合わせ</a>
+        <a href="/request.html">ご要望・ご報告</a>
+      </div>
+      <p class="footer-copy">&copy; 2026 濱田礼 All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    /* ヘッダーのスクロール挙動 */
+    var header = document.getElementById('header');
+    window.addEventListener('scroll', function() {
+      header.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
+
+    /* フォーム送信処理 */
+    var form = document.getElementById('requestForm');
+    var submitBtn = document.getElementById('submitBtn');
+    var messageEl = document.getElementById('formMessage');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      messageEl.className = 'form-message';
+      messageEl.style.display = 'none';
+
+      var data = {
+        name: form.name.value.trim(),
+        email: form.email.value.trim(),
+        category: form.category.value,
+        content: form.content.value.trim(),
+      };
+
+      /* クライアント側バリデーション */
+      if (!data.category) {
+        showMessage('カテゴリを選択してください。', 'error');
+        return;
+      }
+      if (!data.content) {
+        showMessage('内容を入力してください。', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '送信中...';
+
+      fetch('/api/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(json) {
+        if (json.ok) {
+          showMessage('ありがとうございます！ご要望を受け付けました。', 'success');
+          form.reset();
+        } else {
+          showMessage(json.error || '送信に失敗しました。時間をおいて再度お試しください。', 'error');
+        }
+      })
+      .catch(function() {
+        showMessage('通信エラーが発生しました。インターネット接続を確認してください。', 'error');
+      })
+      .finally(function() {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '送信する';
+      });
+    });
+
+    function showMessage(text, type) {
+      messageEl.textContent = text;
+      messageEl.className = 'form-message ' + type;
+    }
+  </script>
+
+</body>
+</html>

@@ -100,6 +100,21 @@ CREATE INDEX IF NOT EXISTS idx_generations_created_at ON generations(created_at)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_webhooks_stripe_event_id ON webhooks_log(stripe_event_id);
 
 -- ============================================================
+-- リクエスト・要望テーブル（リクエストページ用）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS requests (
+    id TEXT PRIMARY KEY,                          -- UUIDv4
+    name TEXT,                                    -- 名前（任意）
+    email TEXT,                                   -- メールアドレス（任意）
+    category TEXT NOT NULL,                       -- カテゴリ: 機能リクエスト / バグ報告 / その他
+    content TEXT NOT NULL,                        -- 内容（必須）
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_requests_created_at ON requests(created_at);
+CREATE INDEX IF NOT EXISTS idx_requests_category ON requests(category);
+
+-- ============================================================
 -- 初期データ: プランマスタ
 -- ============================================================
 
