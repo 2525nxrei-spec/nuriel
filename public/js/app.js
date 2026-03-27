@@ -17,9 +17,7 @@
 const CONFIG = {
   API_BASE: '/api',
   STRIPE_CHECKOUT_URL: '/api/billing/checkout',
-  /* 要設定: Stripe公開鍵（本番時に pk_live_xxxx を設定。未設定でも決済以外は動作する） */
-  /* Stripeダッシュボード > Developers > API Keys > Publishable key からコピー */
-  STRIPE_PUBLISHABLE_KEY: '',
+  STRIPE_PUBLISHABLE_KEY: '', // /api/billing/stripe-keyから動的取得
   // ポーリング間隔（ミリ秒）
   POLL_INTERVAL: 2000,
   // ポーリング最大回数
