@@ -204,15 +204,16 @@ export async function verifyStripeSignature(payload, signatureHeader, secret, to
  * @returns {boolean}
  */
 function timingSafeEqual(a, b) {
+  let mismatch = a.length !== b.length ? 1 : 0;
+  // 長さが違う場合でも定数時間で比較するため、bをaに揃える
   if (a.length !== b.length) {
     b = a;
   }
 
-  let result = a.length === b.length ? 0 : 1;
   for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
-  return result === 0;
+  return mismatch === 0;
 }
 
 // ============================================================
