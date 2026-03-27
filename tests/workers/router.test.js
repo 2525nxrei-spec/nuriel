@@ -41,7 +41,8 @@ describe('Workers ルーター', () => {
     const request = new Request('https://example.com/api/nonexistent');
     const env = createWorkerEnv();
     const res = await worker.fetch(request, env, ctx);
-    expect(res.status).toBe(404);
+    // 認証ミドルウェアが先に401を返すため、未認証では401が正しい
+    expect(res.status).toBe(401);
   });
 
   it('認証なしで/api/auth/meにアクセスすると401を返す', async () => {
