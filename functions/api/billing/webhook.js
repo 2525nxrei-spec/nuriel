@@ -113,6 +113,7 @@ async function handleCheckoutCompleted(event, env) {
     .prepare(`
       UPDATE users
       SET plan = ?,
+          cancel_at_period_end = 0,
           stripe_customer_id = COALESCE(stripe_customer_id, ?),
           stripe_subscription_id = ?,
           updated_at = datetime('now')
@@ -161,11 +162,12 @@ async function handleSubscriptionUpdated(event, env) {
     .prepare(`
       UPDATE users
       SET plan = ?,
+          cancel_at_period_end = ?,
           stripe_subscription_id = ?,
           updated_at = datetime('now')
       WHERE stripe_customer_id = ?
     `)
-    .bind(planId, subscriptionId, customerId)
+    .bind(planId, subscription.cancel_at_period_end ? 1 : 0, subscriptionId, customerId)
     .run();
 
   if (result.meta.changes === 0) {
