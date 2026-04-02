@@ -19,7 +19,7 @@ export async function onRequestPost(context) {
 
     // --- モックモード ---
     if (isMockMode(env)) {
-      const mockPortalUrl = `${frontendUrl}/app.html#plan?mock_portal=true`;
+      const mockPortalUrl = `${frontendUrl}/app.html?mock_portal=true#plan`;
       console.log(`[モック] Customer Portalセッション作成: user=${user.id}`);
       return jsonResponse({ portal_url: mockPortalUrl });
     }
