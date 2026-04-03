@@ -9,6 +9,9 @@ import { jsonResponse, errorResponse } from '../../lib/response.js';
 import { generateId } from '../../lib/crypto.js';
 import { authenticate } from '../../lib/auth.js';
 
+/** Replicateモデルバージョン（環境変数 REPLICATE_MODEL_VERSION で上書き可能） */
+const DEFAULT_REPLICATE_MODEL_VERSION = 'jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613';
+
 /**
  * ArrayBufferをBase64文字列に変換
  * @param {ArrayBuffer} buffer
@@ -75,13 +78,25 @@ async function simulateMockConversion(env, generationId) {
     .bind(lineArtKey, generationId)
     .run();
 
+  // ギャラリーカウントをインクリメント（整合性維持）
+  const gen = await env.NURIEL_DB
+    .prepare('SELECT user_id FROM generations WHERE id = ?')
+    .bind(generationId)
+    .first();
+  if (gen) {
+    await env.NURIEL_DB
+      .prepare('UPDATE users SET gallery_count = gallery_count + 1, updated_at = datetime(\'now\') WHERE id = ?')
+      .bind(gen.user_id)
+      .run();
+  }
+
   console.log(`[モック] 線画変換完了: ${generationId}`);
 }
 
 /**
  * Replicate APIを呼び出してControlNet予測を開始
  */
-async function callReplicateApi(apiToken, imageBase64, style) {
+async function callReplicateApi(apiToken, imageBase64, style, modelVersion) {
   const response = await fetch('https://api.replicate.com/v1/predictions', {
     method: 'POST',
     headers: {
@@ -89,7 +104,7 @@ async function callReplicateApi(apiToken, imageBase64, style) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      version: 'jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613',
+      version: modelVersion,
       input: {
         image: imageBase64,
         prompt: getStylePrompt(style),
@@ -167,7 +182,8 @@ async function startConversion(env, generationId, imageKey, style) {
     const imageBuffer = await originalImage.arrayBuffer();
     const imageBase64 = `data:${originalImage.httpMetadata?.contentType || 'image/png'};base64,${arrayBufferToBase64(imageBuffer)}`;
 
-    const prediction = await callReplicateApi(apiToken, imageBase64, style);
+    const modelVersion = env.REPLICATE_MODEL_VERSION || DEFAULT_REPLICATE_MODEL_VERSION;
+    const prediction = await callReplicateApi(apiToken, imageBase64, style, modelVersion);
 
     await env.NURIEL_DB
       .prepare('UPDATE generations SET replicate_prediction_id = ? WHERE id = ?')
@@ -190,6 +206,18 @@ async function startConversion(env, generationId, imageKey, style) {
         .prepare("UPDATE generations SET line_art_image_key = ?, status = 'completed' WHERE id = ?")
         .bind(lineArtKey, generationId)
         .run();
+
+      // ギャラリーカウントをインクリメント（整合性維持）
+      const gen = await env.NURIEL_DB
+        .prepare('SELECT user_id FROM generations WHERE id = ?')
+        .bind(generationId)
+        .first();
+      if (gen) {
+        await env.NURIEL_DB
+          .prepare('UPDATE users SET gallery_count = gallery_count + 1, updated_at = datetime(\'now\') WHERE id = ?')
+          .bind(gen.user_id)
+          .run();
+      }
     } else {
       throw new Error(`Replicate処理失敗: ${result.error || '不明なエラー'}`);
     }

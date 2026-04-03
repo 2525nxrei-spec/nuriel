@@ -7,11 +7,12 @@
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,                          -- UUIDv4
     email TEXT UNIQUE NOT NULL,                   -- メールアドレス（ログインID）
-    password_hash TEXT NOT NULL,                  -- bcryptハッシュ
+    password_hash TEXT NOT NULL,                  -- PBKDF2ハッシュ
     display_name TEXT,                            -- 表示名
     plan TEXT NOT NULL DEFAULT 'free',            -- 契約プラン: free / otameshi / tappuri
     stripe_customer_id TEXT,                      -- Stripe顧客ID
     stripe_subscription_id TEXT,                  -- StripeサブスクリプションID
+    cancel_at_period_end INTEGER NOT NULL DEFAULT 0, -- 解約予約フラグ（1=期間終了時に解約）
     monthly_generation_count INTEGER NOT NULL DEFAULT 0, -- 今月の生成回数
     monthly_reset_date TEXT,                      -- 月次リセット日（ISO8601）
     gallery_count INTEGER NOT NULL DEFAULT 0,     -- ギャラリー保存数
@@ -55,18 +56,6 @@ CREATE TABLE IF NOT EXISTS plans (
     stripe_price_id_monthly TEXT,                 -- Stripe月額Price ID
     stripe_price_id_yearly TEXT                   -- Stripe年額Price ID
 );
-
--- ログイン試行テーブル（ブルートフォース対策）
-CREATE TABLE IF NOT EXISTS login_attempts (
-    id TEXT PRIMARY KEY,                          -- UUIDv4
-    identifier TEXT NOT NULL,                     -- IPアドレスまたはメールアドレス
-    success INTEGER NOT NULL DEFAULT 0,           -- 成功=1, 失敗=0
-    attempted_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
--- ログイン試行検索の高速化
-CREATE INDEX IF NOT EXISTS idx_login_attempts_identifier ON login_attempts(identifier);
-CREATE INDEX IF NOT EXISTS idx_login_attempts_attempted_at ON login_attempts(attempted_at);
 
 -- Webhookログテーブル（Stripe Webhook受信記録）
 CREATE TABLE IF NOT EXISTS webhooks_log (

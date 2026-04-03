@@ -1,0 +1,14 @@
+name = "nuriel"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "./public"
+
+FRONTEND_URL = "https://photo-nurie.com"
+
+[[d1_databases]]
+binding = "NURIEL_DB"
+database_name = "nuriel-db"
+database_id = "741935ea-58b3-460d-931d-08d20973db45"
+
+[[r2_buckets]]
+binding = "NURIEL_STORAGE"
+bucket_name = "nuriel-storage"

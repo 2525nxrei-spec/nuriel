@@ -4,7 +4,7 @@
  * - オフライン時: フォールバック表示
  */
 
-const CACHE_NAME = 'nuriel-v5';
+const CACHE_NAME = 'nuriel-v6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -49,6 +49,10 @@ self.addEventListener('activate', (event) => {
  */
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  // APIリクエストはキャッシュしない（常にネットワーク直接）
+  const url = new URL(event.request.url);
+  if (url.pathname.startsWith('/api/')) return;
 
   event.respondWith(
     fetch(event.request)

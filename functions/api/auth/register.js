@@ -46,6 +46,9 @@ export async function onRequestPost(context) {
   if (typeof password !== 'string' || password.length < 8) {
     return errorResponse('パスワードは8文字以上で設定してください', 400);
   }
+  if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+    return errorResponse('パスワードは英字と数字の両方を含めてください', 400);
+  }
 
   try {
     // メールアドレス重複チェック

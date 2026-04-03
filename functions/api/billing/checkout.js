@@ -57,7 +57,7 @@ export async function onRequestPost(context) {
     // --- モックモード ---
     if (isMockMode(env)) {
       console.log(`[モック] Checkoutセッション作成: plan=${plan_id}, period=${billing_period}, user=${user.id}`);
-      return jsonResponse({ clientSecret: 'mock_client_secret', mock: true });
+      return jsonResponse({ url: 'https://photo-nurie.com/app.html?payment=success', mock: true });
     }
 
     // --- Stripe顧客の確認/作成 ---
@@ -80,18 +80,17 @@ export async function onRequestPost(context) {
         .run();
     }
 
-    // --- Stripe Embedded Checkout Session作成 ---
+    // --- リダイレクト型 Stripe Checkout Session作成 ---
     const frontendUrl = env.FRONTEND_URL || 'https://photo-nurie.com';
 
-    // Embedded Checkout: ページ内埋め込み決済（リダイレクトなし）
     const session = await stripeRequest('checkout/sessions', 'POST', {
       mode: 'subscription',
-      ui_mode: 'embedded',
       customer: stripeCustomerId,
       locale: 'ja',
       'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',
-      return_url: `${frontendUrl}/app.html?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${frontendUrl}/app.html?payment=success`,
+      cancel_url: `${frontendUrl}/app.html?payment=cancel`,
       metadata: {
         user_id: user.id,
         plan_id: plan_id,
@@ -105,7 +104,7 @@ export async function onRequestPost(context) {
     }, env.STRIPE_SECRET_KEY);
 
     console.log(`Checkoutセッション作成: session=${session.id}, plan=${plan_id}, user=${user.id}`);
-    return jsonResponse({ clientSecret: session.client_secret });
+    return jsonResponse({ url: session.url });
   } catch (err) {
     if (err instanceof StripeApiError) {
       console.error('Stripe Checkoutエラー:', err.message, err.type, err.code);

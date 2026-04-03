@@ -71,8 +71,8 @@ const api = {
         headers,
       });
 
-      // 401: トークン無効 → ログアウト
-      if (res.status === 401) {
+      // 401: 認証エンドポイント以外はセッション切れとして処理
+      if (res.status === 401 && !path.startsWith('/auth/login') && !path.startsWith('/auth/register')) {
         auth.logout();
         throw new Error('セッションが切れました。再度ログインしてください。');
       }
@@ -190,9 +190,9 @@ const state = {
   gallery: [],
   user: null,
   plan: {
-    name: 'おためし',
-    remaining: 3,
-    total: 3,
+    name: '無料体験',
+    remaining: 1,
+    total: 1,
   },
   /* 二重送信防止フラグ */
   isConverting: false,
@@ -391,12 +391,7 @@ function initKeyboardHandlers() {
         galleryModal.classList.remove('show');
         return;
       }
-      /* Embedded Checkoutモーダル */
-      const checkoutModal = document.getElementById('nuriel-checkout-modal');
-      if (checkoutModal) {
-        closeNurielCheckoutModal();
-        return;
-      }
+      /* (リダイレクト型に移行済みのためCheckoutモーダルは不要) */
       /* 変換中オーバーレイは閉じない（処理中のため） */
     }
   });
@@ -467,8 +462,11 @@ const ui = {
       if (pwStrength) pwStrength.style.display = 'block';
     }
 
-    // 切替リンクにイベント
-    document.getElementById('authToggle').addEventListener('click', (e) => {
+    // 切替リンクにイベント（重複登録防止のため古い要素を置換）
+    const oldToggle = document.getElementById('authToggle');
+    const newToggle = oldToggle.cloneNode(true);
+    oldToggle.parentNode.replaceChild(newToggle, oldToggle);
+    newToggle.addEventListener('click', (e) => {
       e.preventDefault();
       this._setAuthMode(mode === 'login' ? 'register' : 'login');
     });
@@ -1289,17 +1287,7 @@ function bindEvents() {
   });
 }
 
-/** Embedded Checkout モーダルを閉じる */
-function closeNurielCheckoutModal() {
-  const modal = document.getElementById('nuriel-checkout-modal');
-  if (modal) modal.remove();
-  if (window._nuriel_embedded_checkout) {
-    window._nuriel_embedded_checkout.destroy();
-    window._nuriel_embedded_checkout = null;
-  }
-}
-
-/** プラン変更処理（Embedded Checkout方式 — ページ内決済） */
+/** プラン変更処理（リダイレクト型 Stripe Checkout） */
 async function handlePlanChange(planName) {
   if (state.plan.name === planName) return;
 
@@ -1335,40 +1323,9 @@ async function handlePlanChange(planName) {
       planUI.render();
       updateStyleLocks();
       showToast(`${planName}プランに変更しました`);
-    } else if (result.clientSecret) {
-      /* Stripe公開鍵を取得 */
-      const keyRes = await fetch('/api/billing/stripe-key');
-      const keyData = await keyRes.json();
-      if (!keyData.publishableKey) {
-        /* 公開鍵未設定 → 環境変数またはmeta tagから取得を試みる */
-        const pk = CONFIG.STRIPE_PUBLISHABLE_KEY
-          || document.querySelector('meta[name="stripe-key"]')?.content;
-        if (!pk) throw new Error('Stripe公開鍵が取得できませんでした');
-        keyData.publishableKey = pk;
-      }
-
-      const stripe = (typeof Stripe !== 'undefined') ? Stripe(keyData.publishableKey) : null;
-      if (!stripe) throw new Error('Stripe.jsが読み込まれていません');
-
-      /* Embedded Checkout モーダルを作成 */
-      const modal = document.createElement('div');
-      modal.id = 'nuriel-checkout-modal';
-      modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
-      modal.innerHTML = `
-        <div style="background:#fff;border-radius:12px;width:100%;max-width:500px;max-height:90vh;overflow:auto;position:relative;">
-          <button id="nuriel-checkout-close" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:24px;cursor:pointer;color:#666;z-index:1;">&times;</button>
-          <div id="nuriel-checkout-container" style="padding:16px;"></div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-
-      document.getElementById('nuriel-checkout-close').addEventListener('click', closeNurielCheckoutModal);
-      modal.addEventListener('click', (e) => { if (e.target === modal) closeNurielCheckoutModal(); });
-
-      /* Embedded Checkoutをマウント */
-      const checkout = await stripe.initEmbeddedCheckout({ clientSecret: result.clientSecret });
-      window._nuriel_embedded_checkout = checkout;
-      checkout.mount('#nuriel-checkout-container');
+    } else if (result.url) {
+      /* リダイレクト型: Stripe Checkout URLに遷移 */
+      window.location.href = result.url;
     } else {
       showToast('決済セッションの作成に失敗しました', 'error');
     }
@@ -1423,7 +1380,7 @@ async function initAppData() {
       };
     }
   } catch {
-    state.plan = { name: 'おためし', remaining: 3, total: 3 };
+    state.plan = { name: '無料体験', remaining: 1, total: 1 };
   }
   ui.updateRemaining();
 

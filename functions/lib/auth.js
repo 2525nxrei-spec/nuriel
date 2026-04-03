@@ -35,9 +35,8 @@ export async function authenticate(request, env) {
       return null;
     }
 
-    // 有効期限チェック
-    const now = new Date().toISOString();
-    if (session.expires_at < now) {
+    // 有効期限チェック（タイムスタンプの数値比較）
+    if (new Date(session.expires_at).getTime() < Date.now()) {
       // 期限切れセッションを削除
       await env.NURIEL_DB
         .prepare('DELETE FROM sessions WHERE id = ?')

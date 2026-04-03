@@ -32,7 +32,7 @@ export async function onRequestPost(context) {
     // --- Customer Portalセッション作成 ---
     const session = await stripeRequest('billing_portal/sessions', 'POST', {
       customer: user.stripe_customer_id,
-      return_url: `${frontendUrl}/app.html#plan`,
+      return_url: `${frontendUrl}/app.html?from=portal`,
     }, env.STRIPE_SECRET_KEY);
 
     console.log(`Customer Portal作成: user=${user.id}, customer=${user.stripe_customer_id}`);

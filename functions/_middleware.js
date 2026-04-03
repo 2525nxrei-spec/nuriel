@@ -82,7 +82,7 @@ export async function onRequest(context) {
   }
 
   // レート制限チェック（Webhookは除外）
-  if (!url.pathname.includes('/api/billing/webhook')) {
+  if (!url.pathname.includes('/api/billing/webhook') && !url.pathname.includes('/api/stripe/webhook')) {
     const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
     if (isRateLimited(clientIP, url.pathname)) {
       const errorBody = JSON.stringify({ ok: false, error: 'リクエストが多すぎます。しばらく待ってからお試しください。' });

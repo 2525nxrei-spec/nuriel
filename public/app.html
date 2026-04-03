@@ -10,7 +10,7 @@
     if ('serviceWorker' in navigator) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'nuriel-v5') caches.delete(key);
+          if (key !== 'nuriel-v6') caches.delete(key);
         });
       });
       navigator.serviceWorker.getRegistrations().then(function(regs) {
