@@ -45,9 +45,8 @@ export async function onRequestPost(context) {
     }
 
     // 対応するStripe Price IDを決定
-    const periodKey = billing_period === 'monthly' ? 'monthly' : 'yearly';
     const priceId = (billing_period === 'monthly' ? plan.stripe_price_id_monthly : plan.stripe_price_id_yearly)
-      || STRIPE_PRICE_IDS[plan_id]?.[periodKey]
+      || STRIPE_PRICE_IDS[plan_id]?.[billing_period]
       || null;
 
     if (!priceId) {

@@ -3,20 +3,10 @@
  */
 
 import { jsonResponse, errorResponse } from '../../lib/response.js';
-import { generateId, generateSessionToken, hashPassword } from '../../lib/crypto.js';
+import { generateId, generateSessionToken, hashPassword, getNextMonthlyResetDate } from '../../lib/crypto.js';
 
 /** セッション有効期限: 30日 */
 const SESSION_EXPIRY_DAYS = 30;
-
-/**
- * 次回の月次リセット日を計算（翌月1日 00:00 UTC）
- * @returns {string} ISO8601形式
- */
-function getNextMonthlyResetDate() {
-  const now = new Date();
-  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0));
-  return next.toISOString();
-}
 
 export async function onRequestPost(context) {
   const { request, env } = context;
