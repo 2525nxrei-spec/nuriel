@@ -53,5 +53,11 @@ export async function onRequestPut(context) {
     .bind(newHash, user.id)
     .run();
 
+  // 現在のセッション以外を全て無効化（他デバイスのログインを強制終了）
+  await env.NURIEL_DB
+    .prepare('DELETE FROM sessions WHERE user_id = ? AND id != ?')
+    .bind(user.id, user.sessionId)
+    .run();
+
   return jsonResponse({ message: 'パスワードを変更しました' });
 }
