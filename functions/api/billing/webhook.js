@@ -188,6 +188,7 @@ async function handleSubscriptionDeleted(event, env) {
       UPDATE users
       SET plan = 'free',
           stripe_subscription_id = NULL,
+          cancel_at_period_end = 0,
           updated_at = datetime('now')
       WHERE stripe_customer_id = ?
     `)

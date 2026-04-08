@@ -237,6 +237,12 @@ export async function onRequestPost(context) {
     return errorResponse('imageKey（アップロード済み画像のキー）は必須です', 400);
   }
 
+  // imageKeyの所有者検証: パスにユーザーIDが含まれているか確認
+  // アップロードAPI は `originals/{userId}/...` 形式でキーを生成する
+  if (!imageKey.startsWith(`originals/${user.id}/`)) {
+    return errorResponse('指定された画像へのアクセス権がありません', 403);
+  }
+
   // R2に画像が存在するか確認
   const imageObject = await env.NURIEL_STORAGE.head(imageKey);
   if (!imageObject) {
@@ -245,7 +251,7 @@ export async function onRequestPost(context) {
 
   // プラン情報を取得してスタイル利用可否と月間上限をチェック
   const plan = await env.NURIEL_DB
-    .prepare('SELECT monthly_limit, styles_allowed FROM plans WHERE id = ?')
+    .prepare('SELECT monthly_limit, styles_allowed, gallery_limit FROM plans WHERE id = ?')
     .bind(user.plan)
     .first();
 
@@ -264,13 +270,22 @@ export async function onRequestPost(context) {
 
   // 月間生成上限チェック
   const freshUser = await env.NURIEL_DB
-    .prepare('SELECT monthly_generation_count, monthly_reset_date FROM users WHERE id = ?')
+    .prepare('SELECT monthly_generation_count, monthly_reset_date, gallery_count FROM users WHERE id = ?')
     .bind(user.id)
     .first();
 
   if (freshUser.monthly_generation_count >= plan.monthly_limit) {
     return errorResponse(
       `今月の変換回数が上限（${plan.monthly_limit}回）に達しました。プランをアップグレードするか、来月までお待ちください。`,
+      429
+    );
+  }
+
+  // ギャラリー上限チェック（-1 = 無制限）
+  const galleryLimit = plan.gallery_limit != null ? plan.gallery_limit : 3;
+  if (galleryLimit >= 0 && freshUser.gallery_count >= galleryLimit) {
+    return errorResponse(
+      `ギャラリーの保存上限（${galleryLimit}枚）に達しました。不要な塗り絵を削除するか、プランをアップグレードしてください。`,
       429
     );
   }

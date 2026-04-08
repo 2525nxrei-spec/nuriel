@@ -107,6 +107,13 @@ export async function onRequest(context) {
     for (const [key, value] of Object.entries({ ...corsHeaders, ...secHeaders })) {
       newResponse.headers.set(key, value);
     }
+
+    // app.html はブラウザキャッシュを無効化（ログアウト後の戻るボタン対策）
+    if (url.pathname === '/app.html' || url.pathname.startsWith('/api/')) {
+      newResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      newResponse.headers.set('Pragma', 'no-cache');
+    }
+
     return newResponse;
   } catch (err) {
     console.error('未処理エラー:', err.message);

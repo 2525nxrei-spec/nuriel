@@ -10,7 +10,7 @@
     if ('serviceWorker' in navigator) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'nuriel-v6') caches.delete(key);
+          if (key !== 'nuriel-v7') caches.delete(key);
         });
       });
       navigator.serviceWorker.getRegistrations().then(function(regs) {
@@ -171,7 +171,7 @@
           <img class="result-preview" id="resultPreview" src="" alt="変換された線画の塗り絵">
           <div class="result-actions">
             <button class="btn-primary" id="btnDownloadPdf" aria-label="PDFをダウンロード">PDFをダウンロード</button>
-            <button class="btn-secondary" id="btnSaveGallery" aria-label="ギャラリーに保存する">保存する</button>
+            <button class="btn-secondary" id="btnSaveGallery" aria-label="ギャラリーを見る">ギャラリーを見る</button>
             <button class="btn-secondary" id="btnNewConvert" aria-label="もう1枚つくる">もう1枚つくる</button>
           </div>
         </div>

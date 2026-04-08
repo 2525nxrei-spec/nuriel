@@ -163,7 +163,30 @@ const auth = {
     }
     localStorage.removeItem('nuriel_token');
     localStorage.removeItem('nuriel_user');
+    localStorage.removeItem('nuriel_last_activity');
+    // アプリ状態をリセット
+    state.user = null;
+    state.plan = { name: '無料体験', remaining: 0, total: 0, stylesAllowed: [], galleryLimit: 0, galleryCount: 0, cancelAtPeriodEnd: false, nextBillingDate: null };
+    state.selectedFile = null;
+    state.gallery = [];
+    state.isConverting = false;
+    state.isUploading = false;
+    // UI要素をリセット
+    const resultSection = document.getElementById('resultSection');
+    if (resultSection) resultSection.classList.remove('show');
+    const previewContainer = document.getElementById('previewContainer');
+    if (previewContainer) previewContainer.classList.remove('show');
+    const uploadArea = document.getElementById('uploadArea');
+    if (uploadArea) uploadArea.style.display = 'block';
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) fileInput.value = '';
+    // ギャラリーをクリア
+    const galleryGrid = document.getElementById('galleryGrid');
+    if (galleryGrid) galleryGrid.innerHTML = '';
+    // 認証画面表示
     ui.showAuth();
+    // ハッシュをホームに戻す
+    window.location.hash = 'home';
   },
 
   /** セッションを検証（ページ読み込み時） */
@@ -193,6 +216,11 @@ const state = {
     name: '無料体験',
     remaining: 1,
     total: 1,
+    stylesAllowed: [],
+    galleryLimit: 3,
+    galleryCount: 0,
+    cancelAtPeriodEnd: false,
+    nextBillingDate: null,
   },
   /* 二重送信防止フラグ */
   isConverting: false,
@@ -212,9 +240,23 @@ async function initStripePaymentRequest() {
   /* Stripe.js未ロードまたは公開鍵未設定時はスキップ */
   if (typeof Stripe === 'undefined') return;
 
-  /* 公開鍵を取得（CONFIGまたはmeta tagから） */
-  const pk = CONFIG.STRIPE_PUBLISHABLE_KEY
+  /* 公開鍵を取得（CONFIGまたはmeta tagまたはAPI） */
+  let pk = CONFIG.STRIPE_PUBLISHABLE_KEY
     || document.querySelector('meta[name="stripe-key"]')?.content;
+
+  // APIから動的に公開鍵を取得
+  if (!pk) {
+    try {
+      const keyData = await api.get('/billing/stripe-key');
+      if (keyData.publishableKey) {
+        pk = keyData.publishableKey;
+        CONFIG.STRIPE_PUBLISHABLE_KEY = pk;
+      }
+    } catch {
+      // 取得失敗時はモックモードとして続行
+    }
+  }
+
   if (!pk) {
     /* 公開鍵未設定 = モックモード。バッジは表示しておく */
     detectPaymentMethodsFromBrowser();
@@ -525,7 +567,14 @@ function initRouter() {
   const handleHash = () => {
     const hash = window.location.hash.replace('#', '') || 'home';
     const allowed = ['home', 'gallery', 'plan', 'settings'];
-    const screen = allowed.includes(hash) ? hash : 'home';
+    let screen = allowed.includes(hash) ? hash : 'home';
+
+    // 未ログイン時は全画面homeにフォールバック（認証オーバーレイの下に機密画面を表示しない）
+    if (!auth.isLoggedIn() && screen !== 'home') {
+      screen = 'home';
+      window.location.hash = 'home';
+    }
+
     ui._renderScreen(screen);
   };
 
@@ -696,7 +745,13 @@ function initStyleSelector() {
     opt.addEventListener('click', () => {
       // ロックされたスタイルはクリック不可
       if (opt.classList.contains('locked')) {
-        showToast('このスタイルは「たっぷり」プランで利用できます', 'error');
+        const style = opt.dataset.style;
+        // スタイルごとに必要なプランを案内
+        if (style === 'standard') {
+          showToast('「スタンダード」スタイルは「おためし」プラン以上で利用できます', 'error');
+        } else {
+          showToast('このスタイルは「たっぷり」プランで利用できます', 'error');
+        }
         return;
       }
       // 選択を切替
@@ -733,6 +788,13 @@ const converter = {
     }
     if (state.plan.remaining <= 0) {
       showToast(CONFIG.ERRORS.QUOTA_EXCEEDED, 'error');
+      return;
+    }
+
+    // 選択中スタイルがプランで許可されているかフロントでもチェック
+    const allowed = state.plan.stylesAllowed || [];
+    if (allowed.length > 0 && !allowed.includes(state.selectedStyle)) {
+      showToast('このスタイルは現在のプランでは利用できません。プランのアップグレードをご検討ください。', 'error');
       return;
     }
 
@@ -878,12 +940,10 @@ const converter = {
       }).catch(err => showToast(err.message || CONFIG.ERRORS.PDF_FAIL, 'error'));
     };
 
-    // ギャラリーに保存（二重送信防止付き）
+    // ギャラリーに表示（変換完了時点で自動保存済み）
     const btnSave = document.getElementById('btnSaveGallery');
     btnSave.onclick = () => {
-      withButtonFeedback(btnSave, async () => {
-        await new Promise(r => setTimeout(r, 100));
-      }).then(() => showToast('ギャラリーに保存済みです'));
+      ui.navigate('gallery');
     };
   },
 };
@@ -1035,7 +1095,14 @@ const planUI = {
     const detailEl = document.getElementById('currentPlanDetail');
 
     nameEl.textContent = state.plan.name || '無料体験';
-    detailEl.textContent = `今月の残り: ${state.plan.remaining} / ${state.plan.total} 枚`;
+    if (state.plan.cancelAtPeriodEnd) {
+      const endDate = state.plan.nextBillingDate
+        ? new Date(state.plan.nextBillingDate).toLocaleDateString('ja-JP')
+        : '期間終了日';
+      detailEl.innerHTML = `<span style="color:#dc2626;">解約予約済み（${endDate}まで利用可能）</span><br>今月の残り: ${state.plan.remaining} / ${state.plan.total} 枚`;
+    } else {
+      detailEl.textContent = `今月の残り: ${state.plan.remaining} / ${state.plan.total} 枚`;
+    }
 
     // ボタンの状態更新
     const btnOtameshi = document.getElementById('btnPlanOtameshi');
@@ -1057,8 +1124,8 @@ const planUI = {
 
     if (planName === 'たっぷり') {
       // たっぷりプラン利用中
-      btnOtameshi.textContent = 'ダウングレード';
-      btnOtameshi.className = 'btn-plan btn-plan-upgrade btn-plan-downgrade';
+      btnOtameshi.textContent = 'プラン変更';
+      btnOtameshi.className = 'btn-plan btn-plan-upgrade';
       btnTappuri.textContent = '利用中';
       btnTappuri.className = 'btn-plan btn-plan-current';
     } else if (planName === 'おためし') {
@@ -1086,6 +1153,42 @@ const settingsUI = {
     if (user) {
       document.getElementById('settingsDisplayName').textContent = user.displayName || '未設定';
       document.getElementById('settingsEmail').textContent = user.email || '';
+    }
+
+    // サブスクリプション管理セクション: 有料プランのユーザーのみ表示
+    const subSection = document.getElementById('settingsSubSection');
+    const subInfo = document.getElementById('settingsSubInfo');
+    if (subSection && subInfo) {
+      const planName = state.plan.name;
+      if (planName && planName !== '無料体験' && planName !== 'free') {
+        subSection.style.display = '';
+        subInfo.innerHTML = `
+          <div style="margin-bottom:12px;">
+            <span style="font-size:.85rem;color:#666;">現在のプラン: </span>
+            <strong>${planName}</strong>
+          </div>
+          <button class="btn-settings" id="btnManageSub" style="margin-bottom:8px;">Stripeで管理する</button>
+          <button class="btn-settings" id="btnCancelSub" style="color:#dc2626;">解約する</button>
+        `;
+        // イベントリスナーをバインド
+        document.getElementById('btnManageSub').addEventListener('click', () => {
+          handleOpenPortal('Stripe管理画面に移動します...');
+        });
+        document.getElementById('btnCancelSub').addEventListener('click', async () => {
+          if (!confirm('本当に解約しますか？現在の請求期間が終了するまでサービスをご利用いただけます。')) return;
+          try {
+            const result = await api.post('/billing/cancel', {});
+            showToast(result.message || '解約処理が完了しました');
+            // データを再読み込み
+            await initAppData();
+            settingsUI.render();
+          } catch (err) {
+            showToast(err.message || '解約に失敗しました', 'error');
+          }
+        });
+      } else {
+        subSection.style.display = 'none';
+      }
     }
   },
 };
@@ -1205,7 +1308,12 @@ function bindEvents() {
 
   // --- プランボタン ---
   document.getElementById('btnPlanOtameshi').addEventListener('click', () => {
-    handlePlanChange('おためし');
+    // たっぷり利用中の場合はダウングレード（Customer Portal経由）
+    if (state.plan.name === 'たっぷり') {
+      handleOpenPortal('プラン変更はStripeの管理画面から行います。');
+    } else {
+      handlePlanChange('おためし');
+    }
   });
   document.getElementById('btnPlanTappuri').addEventListener('click', () => {
     handlePlanChange('たっぷり');
@@ -1288,7 +1396,10 @@ function bindEvents() {
 
 /** プラン変更処理（リダイレクト型 Stripe Checkout） */
 async function handlePlanChange(planName) {
-  if (state.plan.name === planName) return;
+  if (state.plan.name === planName) {
+    showToast('現在ご利用中のプランです');
+    return;
+  }
 
   /* ボタンをローディング状態にする（disabled + 「処理中...」テキスト） */
   const btnId = planName === 'たっぷり' ? 'btnPlanTappuri' : 'btnPlanOtameshi';
@@ -1319,8 +1430,13 @@ async function handlePlanChange(planName) {
       /* モックモード: 即座にプラン切替 */
       state.plan.name = planName;
       state.plan.total = planName === 'たっぷり' ? 20 : 3;
+      state.plan.remaining = state.plan.total;
+      state.plan.stylesAllowed = planName === 'たっぷり'
+        ? ['gentle', 'standard', 'sketch', 'manga']
+        : ['gentle', 'standard'];
       planUI.render();
       updateStyleLocks();
+      ui.updateRemaining();
       showToast(`${planName}プランに変更しました`);
     } else if (result.url) {
       /* リダイレクト型: Stripe Checkout URLに遷移 */
@@ -1339,6 +1455,21 @@ async function handlePlanChange(planName) {
   }
 }
 
+/** Stripe Customer Portal を開く（ダウングレード/解約用） */
+async function handleOpenPortal(message) {
+  try {
+    showToast(message || 'Stripe管理画面に移動します...', 'success');
+    const result = await api.post('/billing/portal', {});
+    if (result.portal_url) {
+      window.location.href = result.portal_url;
+    } else {
+      showToast('管理画面のURLを取得できませんでした', 'error');
+    }
+  } catch (err) {
+    showToast(err.message || 'Stripe管理画面を開けませんでした', 'error');
+  }
+}
+
 /** 退会処理（パスワード確認後にアカウント削除） */
 async function handleWithdraw() {
   const pw = prompt('退会するにはパスワードを入力してください。\nこの操作は取り消せません。すべてのデータが削除されます。');
@@ -1352,8 +1483,11 @@ async function handleWithdraw() {
     });
     localStorage.removeItem('nuriel_token');
     localStorage.removeItem('nuriel_user');
+    localStorage.removeItem('nuriel_last_activity');
+    // 即座に認証オーバーレイ表示で操作をブロック
+    ui.showAuth();
     showToast('退会処理が完了しました。ご利用ありがとうございました。');
-    setTimeout(() => { window.location.href = '/'; }, 1500);
+    setTimeout(() => { window.location.href = '/'; }, 2000);
   } catch (err) {
     showToast(err.message || '退会処理に失敗しました', 'error');
   }
@@ -1363,23 +1497,43 @@ async function handleWithdraw() {
 async function initAppData() {
   /* Checkout成功後のリダイレクト処理 */
   const urlParams = new URLSearchParams(window.location.search || window.location.hash.split('?')[1] || '');
-  if (urlParams.get('session_id') || urlParams.get('mock_checkout') === 'success') {
+  if (urlParams.get('payment') === 'success' || urlParams.get('session_id') || urlParams.get('mock_checkout') === 'success') {
     showToast('プランの登録が完了しました！', 'success');
     /* URLパラメータをクリーン */
     history.replaceState(null, '', '/app.html#plan');
   }
+  if (urlParams.get('payment') === 'cancel') {
+    showToast('決済がキャンセルされました', 'error');
+    history.replaceState(null, '', '/app.html#plan');
+  }
+  if (urlParams.get('from') === 'portal') {
+    showToast('Stripe管理画面から戻りました。プラン情報を更新中...', 'success');
+    history.replaceState(null, '', '/app.html#plan');
+  }
 
   try {
+    // /api/auth/me からスタイル情報も含むユーザー情報を取得
+    const meData = await api.get('/auth/me');
+    if (meData.user) {
+      localStorage.setItem('nuriel_user', JSON.stringify(meData.user));
+      state.user = meData.user;
+    }
+
     const data = await api.get('/billing/status');
     if (data.plan && data.usage) {
       state.plan = {
         name: data.plan.name,
         remaining: data.usage.remaining,
         total: data.usage.monthly_limit,
+        stylesAllowed: data.plan.styles_allowed || [],
+        galleryLimit: data.usage.gallery_limit,
+        galleryCount: data.usage.gallery_count,
+        cancelAtPeriodEnd: data.subscription?.cancel_at_period_end || false,
+        nextBillingDate: data.subscription?.next_billing_date || null,
       };
     }
   } catch {
-    state.plan = { name: '無料体験', remaining: 1, total: 1 };
+    state.plan = { name: '無料体験', remaining: 1, total: 1, stylesAllowed: ['gentle'], galleryLimit: 3, galleryCount: 0 };
   }
   ui.updateRemaining();
 
@@ -1389,14 +1543,33 @@ async function initAppData() {
 
 /** プランに応じてスタイルのロック状態を更新 */
 function updateStyleLocks() {
-  const premiumStyles = document.querySelectorAll('.style-option[data-premium="true"]');
-  premiumStyles.forEach((el) => {
-    if (state.plan.name === 'たっぷり') {
+  // stylesAllowed が /api/auth/me から取得されていればそれを使用
+  // なければプラン名からフォールバック判定
+  const allowedStyles = state.plan.stylesAllowed || [];
+
+  document.querySelectorAll('.style-option').forEach((el) => {
+    const style = el.dataset.style;
+    const isAllowed = allowedStyles.length > 0
+      ? allowedStyles.includes(style)
+      : (state.plan.name === 'たっぷり'); // フォールバック: たっぷり以外は全ロック
+
+    if (isAllowed) {
       el.classList.remove('locked');
       el.setAttribute('aria-disabled', 'false');
     } else {
       el.classList.add('locked');
       el.setAttribute('aria-disabled', 'true');
+      // ロックされたスタイルが選択中なら、利用可能な最初のスタイルに切り替え
+      if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+        el.setAttribute('aria-checked', 'false');
+        const firstAllowed = document.querySelector('.style-option:not(.locked)');
+        if (firstAllowed) {
+          firstAllowed.classList.add('selected');
+          firstAllowed.setAttribute('aria-checked', 'true');
+          state.selectedStyle = firstAllowed.dataset.style;
+        }
+      }
     }
   });
 }
@@ -1475,6 +1648,16 @@ async function init() {
     document.addEventListener(e, resetTimer, { passive: true });
   });
 })();
+
+// ブラウザバック時のbfcache対策: ページ復元時にセッション状態を再検証
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    // bfcacheから復元された場合、セッション状態を再検証
+    if (!auth.isLoggedIn()) {
+      ui.showAuth();
+    }
+  }
+});
 
 // DOM 準備完了後に初期化
 document.addEventListener('DOMContentLoaded', init);
