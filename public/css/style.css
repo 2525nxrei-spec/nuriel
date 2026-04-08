@@ -84,15 +84,6 @@ img { max-width: 100%; height: auto; display: block; }
 .btn-cta:active {
   transform: scale(0.97);
 }
-.btn-cta:focus-visible,
-.btn-sub:focus-visible,
-.header-cta:focus-visible,
-.pet-switch-btn:focus-visible,
-.faq-question:focus-visible {
-  outline: 3px solid var(--primary);
-  outline-offset: 2px;
-}
-
 /* --- ヘッダー --- */
 .lp-header {
   position: fixed;

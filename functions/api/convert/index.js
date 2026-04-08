@@ -6,25 +6,11 @@
  */
 
 import { jsonResponse, errorResponse } from '../../lib/response.js';
-import { generateId } from '../../lib/crypto.js';
+import { generateId, arrayBufferToBase64 } from '../../lib/crypto.js';
 import { authenticate } from '../../lib/auth.js';
 
 /** Replicateモデルバージョン（環境変数 REPLICATE_MODEL_VERSION で上書き可能） */
 const DEFAULT_REPLICATE_MODEL_VERSION = 'jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613';
-
-/**
- * ArrayBufferをBase64文字列に変換
- * @param {ArrayBuffer} buffer
- * @returns {string}
- */
-function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
 
 /**
  * 最小限のモックPNG画像を生成（プレースホルダー用）

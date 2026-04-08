@@ -63,6 +63,30 @@ export async function hashPassword(password) {
  * @param {string} stored - 保存済みハッシュ（salt:hash形式）
  * @returns {Promise<boolean>}
  */
+/**
+ * ArrayBufferをBase64文字列に変換
+ * @param {ArrayBuffer} buffer
+ * @returns {string}
+ */
+/**
+ * 次回の月次リセット日を計算（翌月1日 00:00 UTC）
+ * @returns {string} ISO8601形式
+ */
+export function getNextMonthlyResetDate() {
+  const now = new Date();
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0));
+  return next.toISOString();
+}
+
+export function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 export async function verifyPassword(password, stored) {
   const [saltHex, expectedHash] = stored.split(':');
   const salt = new Uint8Array(saltHex.match(/.{2}/g).map(byte => parseInt(byte, 16)));

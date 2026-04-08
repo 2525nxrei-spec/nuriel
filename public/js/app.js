@@ -152,7 +152,7 @@ const auth = {
   logout() {
     // サーバー側セッションも削除（非同期、失敗しても続行）
     const token = localStorage.getItem('nuriel_token');
-    if (token && token !== 'test_token_demo') {
+    if (token) {
       fetch(`${CONFIG.API_BASE}/auth/logout`, {
         method: 'POST',
         headers: {
@@ -391,7 +391,6 @@ function initKeyboardHandlers() {
         galleryModal.classList.remove('show');
         return;
       }
-      /* (リダイレクト型に移行済みのためCheckoutモーダルは不要) */
       /* 変換中オーバーレイは閉じない（処理中のため） */
     }
   });

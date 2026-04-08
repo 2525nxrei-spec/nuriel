@@ -4,16 +4,7 @@
 
 import { jsonResponse, errorResponse } from '../../lib/response.js';
 import { authenticate } from '../../lib/auth.js';
-
-/**
- * 次回の月次リセット日を計算（翌月1日 00:00 UTC）
- * @returns {string} ISO8601形式
- */
-function getNextMonthlyResetDate() {
-  const now = new Date();
-  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0));
-  return next.toISOString();
-}
+import { getNextMonthlyResetDate } from '../../lib/crypto.js';
 
 /**
  * 月次生成カウントのリセットが必要か確認し、必要ならリセットする

@@ -4,20 +4,7 @@
 
 import { jsonResponse, errorResponse } from '../../../lib/response.js';
 import { authenticate } from '../../../lib/auth.js';
-
-/**
- * ArrayBufferをBase64文字列に変換
- * @param {ArrayBuffer} buffer
- * @returns {string}
- */
-function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
+import { arrayBufferToBase64 } from '../../../lib/crypto.js';
 
 export async function onRequestGet(context) {
   const { request, env, params } = context;
